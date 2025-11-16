@@ -1,0 +1,227 @@
+// prisma/schema.prisma
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  name          String
+  password      String?
+  role          UserRole  @default(PATIENT)
+  emailVerified DateTime?
+  image         String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // Relations selon le rôle
+  patient       Patient?
+  professional  Professional?
+  
+  // Relations NextAuth (optionnelles pour commencer)
+  sessions      Session[]
+  accounts      Account[]
+
+  @@map("users")
+}
+
+model Patient {
+  id              String   @id @default(cuid())
+  userId          String   @unique
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // Informations médicales
+  birthDate       DateTime?
+  bloodType       BloodType?
+  height          Int?     // en cm
+  weight          Int?     // en kg
+  gender          Gender?
+  
+  // Relations
+  appointments    Appointment[]
+  prescriptions   Prescription[]
+  medicalRecords  MedicalRecord[]
+  vitalSigns      VitalSign[]
+  
+  @@map("patients")
+}
+
+model Professional {
+  id          String   @id @default(cuid())
+  userId      String   @unique
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  specialty   String
+  licenseNumber String?
+  phone       String?
+  
+  appointments    Appointment[]
+  prescriptions   Prescription[]
+  
+  @@map("professionals")
+}
+
+// MODÈLES MANQUANTS - AJOUTEZ-LES :
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expires      DateTime
+  
+  @@map("sessions")
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  @@unique([provider, providerAccountId])
+  @@map("accounts")
+}
+
+model Appointment {
+  id           String     @id @default(cuid())
+  patientId    String
+  professionalId String
+  date         DateTime
+  duration     Int       // en minutes
+  status       AppointmentStatus @default(SCHEDULED)
+  reason       String?
+  notes        String?
+  
+  patient      Patient     @relation(fields: [patientId], references: [id])
+  professional Professional @relation(fields: [professionalId], references: [id])
+  
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  
+  @@map("appointments")
+}
+
+model Prescription {
+  id           String   @id @default(cuid())
+  patientId    String
+  professionalId String
+  medication   String
+  dosage       String
+  frequency    String
+  duration     String   // "7 jours", "1 mois", etc.
+  instructions String?
+  
+  patient      Patient     @relation(fields: [patientId], references: [id])
+  professional Professional @relation(fields: [professionalId], references: [id])
+  
+  prescribedAt DateTime @default(now())
+  
+  @@map("prescriptions")
+}
+
+model MedicalRecord {
+  id          String   @id @default(cuid())
+  patientId   String
+  recordType  RecordType
+  title       String
+  description String?
+  severity    SeverityLevel?
+  date        DateTime
+  createdBy   String   // ID du professionnel
+  
+  patient     Patient  @relation(fields: [patientId], references: [id])
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  @@map("medical_records")
+}
+
+model VitalSign {
+  id        String   @id @default(cuid())
+  patientId String
+  type      VitalSignType
+  value     String
+  unit      String
+  measuredAt DateTime @default(now())
+  
+  patient   Patient  @relation(fields: [patientId], references: [id])
+  
+  @@map("vital_signs")
+}
+
+// ENUMS MANQUANTS - AJOUTEZ-LES :
+
+enum UserRole {
+  PATIENT
+  DOCTOR
+  ADMIN
+}
+
+enum BloodType {
+  A_POSITIVE
+  A_NEGATIVE
+  B_POSITIVE
+  B_NEGATIVE
+  AB_POSITIVE
+  AB_NEGATIVE
+  O_POSITIVE
+  O_NEGATIVE
+}
+
+enum Gender {
+  MALE
+  FEMALE
+  OTHER
+}
+
+enum AppointmentStatus {
+  SCHEDULED
+  CONFIRMED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+  NO_SHOW
+}
+
+enum RecordType {
+  ALLERGY
+  CONDITION
+  PROCEDURE
+  LAB_RESULT
+  IMAGING
+  NOTE
+  VACCINATION
+}
+
+enum SeverityLevel {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum VitalSignType {
+  BLOOD_PRESSURE
+  HEART_RATE
+  TEMPERATURE
+  OXYGEN_SATURATION
+  WEIGHT
+  HEIGHT
+  BLOOD_GLUCOSE
+}
