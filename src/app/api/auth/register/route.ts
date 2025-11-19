@@ -1,4 +1,3 @@
-// app/api/auth/register/route.ts
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import bcrypt from 'bcryptjs'
@@ -9,7 +8,6 @@ export async function POST(request: Request) {
     const body = await request.json()
     const { name, email, password, role } = registerSchema.parse(body)
 
-    // Vérifier si l'utilisateur existe déjà
     const existingUser = await prisma.user.findUnique({
       where: { email }
     })
@@ -21,10 +19,8 @@ export async function POST(request: Request) {
       )
     }
 
-    // Hasher le mot de passe
     const hashedPassword = await bcrypt.hash(password, 12)
 
-    // Créer l'utilisateur
     const user = await prisma.user.create({
       data: {
         name,
@@ -34,7 +30,6 @@ export async function POST(request: Request) {
       },
     })
 
-    // Créer le profil selon le rôle
     if (role === 'PATIENT') {
       await prisma.patient.create({
         data: {
