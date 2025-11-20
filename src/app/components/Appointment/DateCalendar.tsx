@@ -1,24 +1,31 @@
-// components/Appointment/DateCalendar.tsx
 'use client'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 
 interface DateCalendarProps {
   selectedDate: Date | null
   onSelectDate: (date: Date) => void
-  availableDates: Date[]
+  availableDates: string[] | Date[] 
+  selectedDoctor?: any
 }
 
 export default function DateCalendar({
   selectedDate,
   onSelectDate,
-  availableDates
+  availableDates,
+  selectedDoctor
 }: DateCalendarProps) {
   const [currentMonth, setCurrentMonth] = useState(new Date())
+  const [loading, setLoading] = useState(false)
+
+  const normalizedAvailableDates = availableDates.map(date => 
+    typeof date === 'string' ? new Date(date) : date
+  )
 
   const isDateAvailable = (date: Date) => {
-    return availableDates.some(availableDate => 
-      availableDate.toDateString() === date.toDateString()
-    )
+    return normalizedAvailableDates.some(availableDate => {
+      const availableDateObj = availableDate instanceof Date ? availableDate : new Date(availableDate)
+      return availableDateObj.toDateString() === date.toDateString()
+    })
   }
 
   const isSameDay = (date1: Date, date2: Date) => {
@@ -32,7 +39,6 @@ export default function DateCalendar({
     const lastDay = new Date(year, month + 1, 0)
     const days = []
 
-    // Jours du mois précédent
     const prevMonthLastDay = new Date(year, month, 0).getDate()
     const firstDayOfWeek = firstDay.getDay()
     for (let i = firstDayOfWeek - 1; i >= 0; i--) {
@@ -40,13 +46,11 @@ export default function DateCalendar({
       days.push({ date: day, isCurrentMonth: false })
     }
 
-    // Jours du mois courant
     for (let i = 1; i <= lastDay.getDate(); i++) {
       const day = new Date(year, month, i)
       days.push({ date: day, isCurrentMonth: true })
     }
 
-    // Jours du mois suivant
     const totalCells = 42 // 6 semaines
     const nextMonthDays = totalCells - days.length
     for (let i = 1; i <= nextMonthDays; i++) {
@@ -67,6 +71,17 @@ export default function DateCalendar({
 
   const days = getDaysInMonth(currentMonth)
   const weekDays = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim']
+
+  if (loading) {
+    return (
+      <div className="bg-white rounded-2xl p-6 border border-gray-200">
+        <div className="flex items-center justify-center py-8">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-cyan-500"></div>
+          <span className="ml-3 text-gray-600">Chargement des dates disponibles...</span>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="bg-white rounded-2xl p-6 border border-gray-200">
@@ -90,7 +105,6 @@ export default function DateCalendar({
         </div>
       </div>
 
-      {/* En-têtes des jours */}
       <div className="grid grid-cols-7 gap-1 mb-4">
         {weekDays.map(day => (
           <div key={day} className="text-center text-sm font-medium text-gray-500 py-2">
@@ -99,7 +113,6 @@ export default function DateCalendar({
         ))}
       </div>
 
-      {/* Grille des jours */}
       <div className="grid grid-cols-7 gap-1">
         {days.map(({ date, isCurrentMonth }, index) => {
           const available = isDateAvailable(date)
@@ -128,6 +141,22 @@ export default function DateCalendar({
             </button>
           )
         })}
+      </div>
+
+      <div className="mt-4 space-y-2">
+        <div className="flex items-center justify-center space-x-4 text-xs">
+          <div className="flex items-center space-x-1">
+            <div className="w-3 h-3 bg-cyan-500 rounded"></div>
+            <span>Disponible</span>
+          </div>
+          <div className="flex items-center space-x-1">
+            <div className="w-3 h-3 bg-gray-100 rounded"></div>
+            <span>Indisponible</span>
+          </div>
+        </div>
+        <div className="text-center text-xs text-gray-500">
+          {normalizedAvailableDates.length} dates disponibles ce mois-ci
+        </div>
       </div>
     </div>
   )

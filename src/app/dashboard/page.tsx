@@ -225,13 +225,13 @@ export default function DashboardPage() {
         {
           label: 'RDV à venir',
           value: appointmentStats.upcoming,
-          color: 'blue',
+          color: 'cyan',
           icon: '🕒'
         },
         {
           label: 'Patients',
           value: appointmentStats.total,
-          color: 'green',
+          color: 'cyan',
           icon: '👥'
         }
       ]

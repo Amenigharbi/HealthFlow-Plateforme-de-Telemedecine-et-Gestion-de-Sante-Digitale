@@ -23,7 +23,7 @@ model User {
   patient       Patient?
   professional  Professional?
   
-  // Relations NextAuth (optionnelles pour commencer)
+  // Relations NextAuth
   sessions      Session[]
   accounts      Account[]
 
@@ -60,13 +60,13 @@ model Professional {
   licenseNumber String?
   phone       String?
   
+  // Relations
   appointments    Appointment[]
   prescriptions   Prescription[]
+  availabilities  Availability[]  // ← AJOUTÉ ICI
   
   @@map("professionals")
 }
-
-// MODÈLES MANQUANTS - AJOUTEZ-LES :
 
 model Session {
   id           String   @id @default(cuid())
@@ -165,8 +165,36 @@ model VitalSign {
   @@map("vital_signs")
 }
 
-// ENUMS MANQUANTS - AJOUTEZ-LES :
+model Availability {
+  id              String   @id @default(cuid())
+  professionalId  String
+  professional    Professional @relation(fields: [professionalId], references: [id], onDelete: Cascade)
+  
+  dayOfWeek       Int      // 0-6 (dimanche-samedi)
+  startTime       String   // "09:00"
+  endTime         String   // "17:00"
+  isActive        Boolean  @default(true)
+  
+  breaks          Break[]
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  @@unique([professionalId, dayOfWeek])
+}
 
+model Break {
+  id              String   @id @default(cuid())
+  availabilityId  String
+  availability    Availability @relation(fields: [availabilityId], references: [id], onDelete: Cascade)
+  
+  startTime       String   // "12:00"
+  endTime         String   // "13:30"
+  
+  createdAt       DateTime @default(now())
+}
+
+// ENUMS
 enum UserRole {
   PATIENT
   DOCTOR

@@ -14,6 +14,12 @@ export default function TimeSlots({
   onSelectSlot,
   loading = false
 }: TimeSlotsProps) {
+  const normalizedSlots = slots.map(slot => ({
+    ...slot,
+    start: slot.start instanceof Date ? slot.start : new Date(slot.start),
+    end: slot.end instanceof Date ? slot.end : new Date(slot.end)
+  }))
+
   const groupSlotsByHour = (slots: TimeSlot[]) => {
     const groups: { [key: string]: TimeSlot[] } = {}
     
@@ -37,7 +43,7 @@ export default function TimeSlots({
     })
   }
 
-  const groupedSlots = groupSlotsByHour(slots)
+  const groupedSlots = groupSlotsByHour(normalizedSlots)
 
   if (loading) {
     return (
@@ -60,7 +66,7 @@ export default function TimeSlots({
         Choisir un horaire
       </h3>
 
-      {slots.length === 0 ? (
+      {normalizedSlots.length === 0 ? (
         <div className="text-center py-8">
           <div className="text-gray-400 text-4xl mb-2">📅</div>
           <p className="text-gray-500">Aucun créneau disponible</p>
@@ -99,6 +105,10 @@ export default function TimeSlots({
           ))}
         </div>
       )}
+
+      <div className="mt-4 text-xs text-gray-500">
+        {normalizedSlots.length} créneaux disponibles
+      </div>
     </div>
   )
 }

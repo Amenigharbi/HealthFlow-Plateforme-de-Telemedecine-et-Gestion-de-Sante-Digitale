@@ -13,6 +13,7 @@ interface Appointment {
   }
   status: string
   reason: string
+  duration: number
 }
 
 export default function AppointmentsPage() {
@@ -20,6 +21,7 @@ export default function AppointmentsPage() {
   const router = useRouter()
   const [appointments, setAppointments] = useState<Appointment[]>([])
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     if (status === 'loading') return
@@ -34,13 +36,23 @@ export default function AppointmentsPage() {
   const loadAppointments = async () => {
     try {
       setLoading(true)
+      setError(null)
+      console.log('🔄 Chargement des rendez-vous...')
+      
       const response = await fetch('/api/appointments')
+      
       if (response.ok) {
         const data = await response.json()
-        setAppointments(data.appointments)
+        console.log('✅ Données reçues:', data)
+        setAppointments(data.appointments || [])
+      } else {
+        const errorData = await response.json()
+        setError(errorData.error || 'Erreur lors du chargement')
+        console.error('❌ Erreur API:', errorData)
       }
     } catch (error) {
-      console.error('Erreur chargement rendez-vous:', error)
+      console.error('❌ Erreur chargement rendez-vous:', error)
+      setError('Erreur de connexion')
     } finally {
       setLoading(false)
     }
@@ -55,9 +67,12 @@ export default function AppointmentsPage() {
       })
 
       if (response.ok) {
-        setAppointments(prev => prev.filter(apt => apt.id !== appointmentId))
+        // Recharger la liste
+        await loadAppointments()
+        alert('Rendez-vous annulé avec succès')
       } else {
-        alert('Erreur lors de l\'annulation')
+        const errorData = await response.json()
+        alert(errorData.error || 'Erreur lors de l\'annulation')
       }
     } catch (error) {
       console.error('Erreur annulation:', error)
@@ -89,6 +104,18 @@ export default function AppointmentsPage() {
               Prendre un RDV
             </button>
           </div>
+
+          {error && (
+            <div className="bg-red-50 border border-red-200 rounded-xl p-4 mb-6">
+              <p className="text-red-800">{error}</p>
+              <button
+                onClick={loadAppointments}
+                className="mt-2 text-red-600 hover:text-red-800 font-medium"
+              >
+                Réessayer
+              </button>
+            </div>
+          )}
 
           {appointments.length === 0 ? (
             <div className="text-center py-12">
@@ -147,11 +174,15 @@ export default function AppointmentsPage() {
                                 ? 'bg-green-100 text-green-800'
                                 : appointment.status === 'SCHEDULED'
                                 ? 'bg-blue-100 text-blue-800'
+                                : appointment.status === 'CANCELLED'
+                                ? 'bg-red-100 text-red-800'
                                 : 'bg-gray-100 text-gray-800'
                             }`}
                           >
                             {appointment.status === 'CONFIRMED' ? 'Confirmé' : 
-                             appointment.status === 'SCHEDULED' ? 'Programmé' : 'Annulé'}
+                             appointment.status === 'SCHEDULED' ? 'Programmé' : 
+                             appointment.status === 'CANCELLED' ? 'Annulé' : 
+                             appointment.status}
                           </span>
                         </div>
                       </div>

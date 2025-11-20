@@ -1,4 +1,3 @@
-// hooks/useAppointmentBooking.ts
 import { useState, useEffect } from 'react'
 import { Doctor, TimeSlot } from '@/types/appointment'
 
@@ -12,7 +11,6 @@ export function useAppointmentBooking() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  // Charger la liste des médecins
   useEffect(() => {
     const fetchDoctors = async () => {
       try {
@@ -37,34 +35,31 @@ export function useAppointmentBooking() {
     fetchDoctors()
   }, [])
 
-  // Charger les dates disponibles quand un médecin est sélectionné
-  useEffect(() => {
-    const fetchAvailableDates = async () => {
-      if (!selectedDoctor) return
-
-      try {
-        setLoading(true)
-        setError(null)
-        const response = await fetch(`/api/doctors/${selectedDoctor.id}/availability`)
-        
-        if (!response.ok) {
-          throw new Error('Erreur lors du chargement des dates disponibles')
-        }
-        
+useEffect(() => {
+  const fetchAvailableDates = async (doctorId: string) => {
+    try {
+      const response = await fetch(`/api/doctors/availability?professionalId=${doctorId}`)
+      
+      if (response.ok) {
         const data = await response.json()
-        setAvailableDates(data.availableDates)
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'Une erreur est survenue')
-        console.error('Erreur fetchAvailableDates:', err)
-      } finally {
-        setLoading(false)
+        setAvailableDates(data.availableDates || [])
+      } else {
+        console.error('❌ Erreur API dates disponibles:', response.status)
+        setAvailableDates([])
       }
+    } catch (error) {
+      console.error('❌ Erreur chargement dates disponibles:', error)
+      setAvailableDates([])
     }
+  }
 
-    fetchAvailableDates()
-  }, [selectedDoctor])
+  if (selectedDoctor) {
+    fetchAvailableDates(selectedDoctor.id)
+  } else {
+    setAvailableDates([])
+  }
+}, [selectedDoctor])
 
-  // Charger les créneaux quand une date est sélectionnée
   useEffect(() => {
     const fetchTimeSlots = async () => {
       if (!selectedDoctor || !selectedDate) return
@@ -74,8 +69,8 @@ export function useAppointmentBooking() {
         setError(null)
         const dateString = selectedDate.toISOString().split('T')[0]
         const response = await fetch(
-          `/api/doctors/${selectedDoctor.id}/slots?date=${dateString}`
-        )
+      `/api/doctors/slots?professionalId=${selectedDoctor.id}&date=${dateString}`
+    )
         
         if (!response.ok) {
           throw new Error('Erreur lors du chargement des créneaux')
@@ -118,7 +113,6 @@ export function useAppointmentBooking() {
         throw new Error(result.error || 'Erreur lors de la réservation')
       }
 
-      // Reset du formulaire
       setSelectedDoctor(null)
       setSelectedDate(null)
       setSelectedSlot(null)
