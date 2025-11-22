@@ -67,7 +67,6 @@ export default function AppointmentsPage() {
       })
 
       if (response.ok) {
-        // Recharger la liste
         await loadAppointments()
         alert('Rendez-vous annulé avec succès')
       } else {

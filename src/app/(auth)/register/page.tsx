@@ -50,19 +50,18 @@ export default function RegisterPage() {
 
   return (
     <div className="min-h-screen bg-linear-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center p-4 relative overflow-hidden">
-      {/* Background Animated Elements */}
       <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute -top-40 -right-40 w-80 h-80 bg-purple-500/10 rounded-full blur-3xl animate-float"></div>
-        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-cyan-500/10 rounded-full blur-3xl animate-float-delayed"></div>
+        <div className="absolute -top-40 -right-40 w-80 h-80 bg-purple-500/10 rounded-full blur-3xl animate-pulse"></div>
+        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-cyan-500/10 rounded-full blur-3xl animate-pulse delay-1000"></div>
         <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-blue-500/5 rounded-full blur-3xl"></div>
       </div>
 
       <div className="max-w-md w-full relative z-10">
         {/* Main Card */}
-        <div className="bg-white/5 backdrop-blur-2xl rounded-3xl shadow-2xl border border-white/10 p-8 transform transition-all duration-500 hover:shadow-2xl">
+        <div className="bg-white/5 backdrop-blur-2xl rounded-3xl shadow-2xl border border-white/10 p-8 transform transition-all duration-500">
           {/* Header */}
           <div className="text-center mb-8">
-            <div className="mx-auto w-20 h-20 bg-linear-to-r from-purple-500 to-cyan-500 rounded-2xl flex items-center justify-center mb-4 shadow-2xl shadow-purple-500/25 transform transition-transform duration-300 hover:scale-105">
+            <div className="mx-auto w-20 h-20 bg-linear-to-r from-purple-500 to-cyan-500 rounded-2xl flex items-center justify-center mb-4 shadow-2xl shadow-purple-500/25">
               <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm">
                 <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
@@ -79,7 +78,7 @@ export default function RegisterPage() {
 
           {/* Error Message */}
           {error && (
-            <div className="bg-red-500/10 border border-red-500/20 rounded-2xl p-4 mb-6 backdrop-blur-sm animate-fade-in">
+            <div className="bg-red-500/10 border border-red-500/20 rounded-2xl p-4 mb-6 backdrop-blur-sm">
               <div className="flex items-center space-x-3">
                 <div className="shrink-0 w-8 h-8 bg-red-500/20 rounded-xl flex items-center justify-center">
                   <svg className="w-4 h-4 text-red-400" fill="currentColor" viewBox="0 0 20 20">
@@ -98,30 +97,22 @@ export default function RegisterPage() {
               <label htmlFor="name" className="block text-sm font-medium text-gray-300">
                 Nom complet
               </label>
-              <div className="relative group">
-                <div className="absolute inset-0 bg-linear-to-r from-purple-500/20 to-cyan-500/20 rounded-2xl blur-sm group-hover:blur-md transition-all duration-300 opacity-0 group-hover:opacity-100"></div>
+              <div className="relative">
                 <input
                   {...register('name')}
                   id="name"
                   type="text"
-                  className={`relative w-full px-4 py-4 bg-white/5 border rounded-2xl focus:outline-none focus:ring-2 transition-all duration-300 backdrop-blur-sm ${
+                  className={`w-full px-4 py-4 bg-white/5 border rounded-2xl focus:outline-none focus:ring-2 transition-all duration-300 backdrop-blur-sm ${
                     errors.name 
                       ? 'border-red-500/50 focus:ring-red-500/20 focus:border-red-500/50' 
-                      : 'border-white/10 focus:ring-purple-500/20 focus:border-purple-500/50 group-hover:border-white/20'
+                      : 'border-white/10 focus:ring-purple-500/20 focus:border-purple-500/50'
                   } ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
                   disabled={isLoading}
                   placeholder="Votre nom complet"
                 />
-                {errors.name && (
-                  <div className="absolute right-4 top-1/2 transform -translate-y-1/2">
-                    <svg className="w-5 h-5 text-red-400" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-                    </svg>
-                  </div>
-                )}
               </div>
               {errors.name && (
-                <p className="text-red-400 text-sm flex items-center space-x-2 animate-fade-in">
+                <p className="text-red-400 text-sm flex items-center space-x-2">
                   <span className="w-1.5 h-1.5 bg-red-400 rounded-full"></span>
                   <span>{errors.name.message}</span>
                 </p>
@@ -133,30 +124,22 @@ export default function RegisterPage() {
               <label htmlFor="email" className="block text-sm font-medium text-gray-300">
                 Adresse email
               </label>
-              <div className="relative group">
-                <div className="absolute inset-0 bg-linear-to-r from-purple-500/20 to-cyan-500/20 rounded-2xl blur-sm group-hover:blur-md transition-all duration-300 opacity-0 group-hover:opacity-100"></div>
+              <div className="relative">
                 <input
                   {...register('email')}
                   id="email"
                   type="email"
-                  className={`relative w-full px-4 py-4 bg-white/5 border rounded-2xl focus:outline-none focus:ring-2 transition-all duration-300 backdrop-blur-sm ${
+                  className={`w-full px-4 py-4 bg-white/5 border rounded-2xl focus:outline-none focus:ring-2 transition-all duration-300 backdrop-blur-sm ${
                     errors.email 
                       ? 'border-red-500/50 focus:ring-red-500/20 focus:border-red-500/50' 
-                      : 'border-white/10 focus:ring-purple-500/20 focus:border-purple-500/50 group-hover:border-white/20'
+                      : 'border-white/10 focus:ring-purple-500/20 focus:border-purple-500/50'
                   } ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
                   disabled={isLoading}
                   placeholder="votre@email.com"
                 />
-                {errors.email && (
-                  <div className="absolute right-4 top-1/2 transform -translate-y-1/2">
-                    <svg className="w-5 h-5 text-red-400" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-                    </svg>
-                  </div>
-                )}
               </div>
               {errors.email && (
-                <p className="text-red-400 text-sm flex items-center space-x-2 animate-fade-in">
+                <p className="text-red-400 text-sm flex items-center space-x-2">
                   <span className="w-1.5 h-1.5 bg-red-400 rounded-full"></span>
                   <span>{errors.email.message}</span>
                 </p>
@@ -168,30 +151,22 @@ export default function RegisterPage() {
               <label htmlFor="password" className="block text-sm font-medium text-gray-300">
                 Mot de passe
               </label>
-              <div className="relative group">
-                <div className="absolute inset-0 bg-linear-to-r from-purple-500/20 to-cyan-500/20 rounded-2xl blur-sm group-hover:blur-md transition-all duration-300 opacity-0 group-hover:opacity-100"></div>
+              <div className="relative">
                 <input
                   {...register('password')}
                   id="password"
                   type="password"
-                  className={`relative w-full px-4 py-4 bg-white/5 border rounded-2xl focus:outline-none focus:ring-2 transition-all duration-300 backdrop-blur-sm ${
+                  className={`w-full px-4 py-4 bg-white/5 border rounded-2xl focus:outline-none focus:ring-2 transition-all duration-300 backdrop-blur-sm ${
                     errors.password 
                       ? 'border-red-500/50 focus:ring-red-500/20 focus:border-red-500/50' 
-                      : 'border-white/10 focus:ring-purple-500/20 focus:border-purple-500/50 group-hover:border-white/20'
+                      : 'border-white/10 focus:ring-purple-500/20 focus:border-purple-500/50'
                   } ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
                   disabled={isLoading}
                   placeholder="••••••••"
                 />
-                {errors.password && (
-                  <div className="absolute right-4 top-1/2 transform -translate-y-1/2">
-                    <svg className="w-5 h-5 text-red-400" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-                    </svg>
-                  </div>
-                )}
               </div>
               {errors.password && (
-                <p className="text-red-400 text-sm flex items-center space-x-2 animate-fade-in">
+                <p className="text-red-400 text-sm flex items-center space-x-2">
                   <span className="w-1.5 h-1.5 bg-red-400 rounded-full"></span>
                   <span>{errors.password.message}</span>
                 </p>
@@ -203,13 +178,12 @@ export default function RegisterPage() {
               <label htmlFor="role" className="block text-sm font-medium text-gray-300">
                 Je suis
               </label>
-              <div className="relative group">
-                <div className="absolute inset-0 bg-linear-to-r from-purple-500/20 to-cyan-500/20 rounded-2xl blur-sm group-hover:blur-md transition-all duration-300 opacity-0 group-hover:opacity-100"></div>
+              <div className="relative">
                 <select
                   {...register('role')}
                   id="role"
-                  className={`relative w-full px-4 py-4 bg-white/5 border border-white/10 rounded-2xl focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500/50 transition-all duration-300 appearance-none backdrop-blur-sm ${
-                    isLoading ? 'opacity-50 cursor-not-allowed' : 'group-hover:border-white/20'
+                  className={`w-full px-4 py-4 bg-white/5 border border-white/10 rounded-2xl focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500/50 transition-all duration-300 appearance-none backdrop-blur-sm ${
+                    isLoading ? 'opacity-50 cursor-not-allowed' : ''
                   }`}
                   disabled={isLoading}
                 >
@@ -228,12 +202,8 @@ export default function RegisterPage() {
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full group relative overflow-hidden bg-linear-to-r from-purple-600 to-cyan-600 text-white py-4 px-6 rounded-2xl font-semibold transition-all duration-500 transform hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none shadow-2xl shadow-purple-500/25 hover:shadow-3xl hover:shadow-purple-500/40"
+              className="w-full relative overflow-hidden bg-linear-to-r from-purple-600 to-cyan-600 text-white py-4 px-6 rounded-2xl font-semibold transition-all duration-300 hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none shadow-2xl shadow-purple-500/25"
             >
-              {/* Animated background */}
-              <div className="absolute inset-0 bg-linear-to-r from-purple-700 to-cyan-700 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-500 origin-left"></div>
-              
-              {/* Button content */}
               <div className="relative flex items-center justify-center space-x-3">
                 {isLoading ? (
                   <>
@@ -242,7 +212,7 @@ export default function RegisterPage() {
                   </>
                 ) : (
                   <>
-                    <div className="w-6 h-6 bg-white/20 rounded-lg flex items-center justify-center backdrop-blur-sm transform group-hover:scale-110 transition-transform duration-300">
+                    <div className="w-6 h-6 bg-white/20 rounded-lg flex items-center justify-center backdrop-blur-sm">
                       <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                       </svg>
@@ -280,30 +250,6 @@ export default function RegisterPage() {
           </p>
         </div>
       </div>
-
-      <style jsx global>{`
-        @keyframes fade-in {
-          from { opacity: 0; transform: translateY(-10px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-        @keyframes float {
-          0%, 100% { transform: translateY(0px) rotate(0deg); }
-          50% { transform: translateY(-20px) rotate(180deg); }
-        }
-        @keyframes float-delayed {
-          0%, 100% { transform: translateY(0px) rotate(0deg); }
-          50% { transform: translateY(-20px) rotate(-180deg); }
-        }
-        .animate-fade-in {
-          animation: fade-in 0.5s ease-out;
-        }
-        .animate-float {
-          animation: float 6s ease-in-out infinite;
-        }
-        .animate-float-delayed {
-          animation: float-delayed 8s ease-in-out infinite;
-        }
-      `}</style>
     </div>
   )
 }

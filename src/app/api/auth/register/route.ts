@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import bcrypt from 'bcryptjs'
-import { registerSchema } from '@/lib/validations/auth'  // ← IMPORT CORRECT
+import { registerSchema } from '@/lib/validations/auth'  
 
 export async function POST(request: Request) {
   try {

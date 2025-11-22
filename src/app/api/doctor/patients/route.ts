@@ -11,6 +11,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Accès non autorisé' }, { status: 401 })
     }
 
+    // Récupérer le professionnel connecté
     const professional = await prisma.professional.findUnique({
       where: { userId: session.user.id }
     })
@@ -19,7 +20,8 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Profil médecin non trouvé' }, { status: 404 })
     }
 
-    const patientAppointments = await prisma.appointment.findMany({
+    // Récupérer les patients ayant des rendez-vous avec ce professionnel
+    const appointments = await prisma.appointment.findMany({
       where: {
         professionalId: professional.id
       },
@@ -35,51 +37,66 @@ export async function GET(request: NextRequest) {
           }
         }
       },
-      orderBy: { date: 'desc' }
+      orderBy: {
+        date: 'desc'
+      }
     })
 
+    // Grouper par patient et calculer les statistiques
     const patientMap = new Map()
-
-    patientAppointments.forEach(apt => {
-      const patientId = apt.patient.id
-      if (!patientMap.has(patientId)) {
-        patientMap.set(patientId, {
-          id: patientId,
+    
+    appointments.forEach(apt => {
+      if (!patientMap.has(apt.patientId)) {
+        patientMap.set(apt.patientId, {
+          id: apt.patientId,
           name: apt.patient.user.name,
           email: apt.patient.user.email,
+          phone: apt.patient.phone,
+          birthDate: apt.patient.dateOfBirth,
+          gender: apt.patient.gender,
           appointments: [],
-          appointmentCount: 0,
-          lastAppointment: null,
+          lastAppointment: apt.date,
           nextAppointment: null
         })
       }
       
-      const patientData = patientMap.get(patientId)
-      patientData.appointments.push(apt)
-      patientData.appointmentCount++
+      const patient = patientMap.get(apt.patientId)
+      patient.appointments.push(apt)
       
-      if (!patientData.lastAppointment || apt.date > patientData.lastAppointment) {
-        patientData.lastAppointment = apt.date
+      // Mettre à jour le dernier rendez-vous
+      if (new Date(apt.date) > new Date(patient.lastAppointment)) {
+        patient.lastAppointment = apt.date
       }
       
-      const now = new Date()
-      if (apt.date > now && (!patientData.nextAppointment || apt.date < patientData.nextAppointment)) {
-        patientData.nextAppointment = apt.date
+      // Trouver le prochain rendez-vous à venir
+      if ((apt.status === 'SCHEDULED' || apt.status === 'CONFIRMED') && 
+          new Date(apt.date) > new Date()) {
+        if (!patient.nextAppointment || new Date(apt.date) < new Date(patient.nextAppointment)) {
+          patient.nextAppointment = apt.date
+        }
       }
     })
 
+    // Formater la réponse
     const patients = Array.from(patientMap.values()).map(patient => ({
       id: patient.id,
       name: patient.name,
       email: patient.email,
-      appointmentCount: patient.appointmentCount,
-      lastAppointment: patient.lastAppointment?.toISOString(),
-      nextAppointment: patient.nextAppointment?.toISOString()
+      phone: patient.phone,
+      birthDate: patient.birthDate,
+      gender: patient.gender,
+      lastAppointment: patient.lastAppointment,
+      nextAppointment: patient.nextAppointment,
+      appointmentCount: patient.appointments.length
     }))
 
-    return NextResponse.json({ patients })
+    return NextResponse.json({ 
+      success: true, 
+      patients 
+    })
+
   } catch (error) {
-    console.error('Erreur chargement patients médecin:', error)
+    console.error('Erreur récupération patients:', error)
     return NextResponse.json(
       { error: 'Erreur interne du serveur' },
       { status: 500 }

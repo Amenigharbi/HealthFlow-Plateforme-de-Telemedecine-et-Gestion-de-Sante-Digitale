@@ -14,13 +14,13 @@ export async function PATCH(
       return NextResponse.json({ error: 'Accès non autorisé' }, { status: 401 })
     }
 
-    const { id: appointmentId } = await params
-
+    const { id: prescriptionId } = await params
     const body = await request.json()
     const { status } = body
 
-    if (!status) {
-      return NextResponse.json({ error: 'Statut manquant' }, { status: 400 })
+    const validStatuses = ['ACTIVE', 'COMPLETED', 'CANCELLED']
+    if (!validStatuses.includes(status)) {
+      return NextResponse.json({ error: 'Statut invalide' }, { status: 400 })
     }
 
     const professional = await prisma.professional.findUnique({
@@ -31,27 +31,28 @@ export async function PATCH(
       return NextResponse.json({ error: 'Profil médecin non trouvé' }, { status: 404 })
     }
 
-    const appointment = await prisma.appointment.findFirst({
+    const prescription = await prisma.prescription.findFirst({
       where: {
-        id: appointmentId,
+        id: prescriptionId,
         professionalId: professional.id
       }
     })
 
-    if (!appointment) {
-      return NextResponse.json({ error: 'Rendez-vous non trouvé' }, { status: 404 })
+    if (!prescription) {
+      return NextResponse.json({ error: 'Prescription non trouvée' }, { status: 404 })
     }
 
-    const updatedAppointment = await prisma.appointment.update({
-      where: { id: appointmentId },
-      data: { status },
+    const updatedPrescription = await prisma.prescription.update({
+      where: { id: prescriptionId },
+      data: { 
+        status: status as 'ACTIVE' | 'COMPLETED' | 'CANCELLED'
+      },
       include: {
         patient: {
           include: {
             user: {
               select: {
-                name: true,
-                email: true
+                name: true
               }
             }
           }
@@ -59,16 +60,18 @@ export async function PATCH(
       }
     })
 
-    return NextResponse.json({ 
-      success: true, 
-      appointment: {
-        id: updatedAppointment.id,
-        status: updatedAppointment.status,
-        patient: updatedAppointment.patient.user.name
+    return NextResponse.json({
+      success: true,
+      prescription: {
+        id: updatedPrescription.id,
+        medication: updatedPrescription.medication,
+        status: updatedPrescription.status,
+        patientName: updatedPrescription.patient.user.name
       }
     })
+
   } catch (error) {
-    console.error('Erreur mise à jour statut RDV:', error)
+    console.error('Erreur mise à jour prescription:', error)
     return NextResponse.json(
       { error: 'Erreur interne du serveur' },
       { status: 500 }

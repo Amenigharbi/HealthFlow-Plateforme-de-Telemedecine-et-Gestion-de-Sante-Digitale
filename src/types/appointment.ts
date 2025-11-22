@@ -1,4 +1,3 @@
-// types/appointment.ts
 export interface Appointment {
   id: string
   patientId: string

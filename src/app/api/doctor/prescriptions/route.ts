@@ -19,7 +19,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Profil médecin non trouvé' }, { status: 404 })
     }
 
-    const reports = await prisma.medicalReport.findMany({
+    const prescriptions = await prisma.prescription.findMany({
       where: {
         professionalId: professional.id
       },
@@ -35,34 +35,36 @@ export async function GET(request: NextRequest) {
         }
       },
       orderBy: {
-        createdAt: 'desc'
+        prescribedAt: 'desc'
       }
     })
 
-    const formattedReports = reports.map(report => ({
-      id: report.id,
-      title: report.title,
-      patientName: report.patient.user.name,
-      recordType: report.recordType,
-      date: report.createdAt,
-      status: 'COMPLETED',
-      severity: report.severity
+    const formattedPrescriptions = prescriptions.map(prescription => ({
+      id: prescription.id,
+      medication: prescription.medication,
+      dosage: prescription.dosage,
+      frequency: prescription.frequency,
+      duration: prescription.duration,
+      instructions: prescription.instructions,
+      patientName: prescription.patient.user.name,
+      patientId: prescription.patientId,
+      prescribedAt: prescription.prescribedAt,
+      status: prescription.status 
     }))
 
     return NextResponse.json({ 
       success: true, 
-      reports: formattedReports 
+      prescriptions: formattedPrescriptions 
     })
 
   } catch (error) {
-    console.error('Erreur récupération rapports:', error)
+    console.error('Erreur récupération prescriptions:', error)
     return NextResponse.json(
       { error: 'Erreur interne du serveur' },
       { status: 500 }
     )
   }
 }
-
 export async function POST(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions)
@@ -82,15 +84,11 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     const {
       patientId,
-      title,
-      recordType,
-      content,
-      diagnosis,
-      treatment,
-      prescriptions,
-      recommendations,
-      severity,
-      followUpDate
+      medication,
+      dosage,
+      frequency,
+      duration,
+      instructions
     } = body
 
     const patient = await prisma.patient.findUnique({
@@ -114,19 +112,16 @@ export async function POST(request: NextRequest) {
       }, { status: 400 })
     }
 
-    const report = await prisma.medicalReport.create({
+    const prescription = await prisma.prescription.create({
       data: {
         patientId,
         professionalId: professional.id,
-        title,
-        recordType,
-        content,
-        diagnosis,
-        treatment,
-        prescriptions: prescriptions || [],
-        recommendations,
-        severity,
-        followUpDate: followUpDate ? new Date(followUpDate) : null
+        medication,
+        dosage,
+        frequency,
+        duration,
+        instructions,
+        status: 'ACTIVE' 
       },
       include: {
         patient: {
@@ -143,18 +138,21 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      report: {
-        id: report.id,
-        title: report.title,
-        patientName: report.patient.user.name,
-        recordType: report.recordType,
-        date: report.createdAt,
-        severity: report.severity
+      prescription: {
+        id: prescription.id,
+        medication: prescription.medication,
+        dosage: prescription.dosage,
+        frequency: prescription.frequency,
+        duration: prescription.duration,
+        instructions: prescription.instructions,
+        status: prescription.status, 
+        patientName: prescription.patient.user.name,
+        prescribedAt: prescription.prescribedAt
       }
     })
 
   } catch (error) {
-    console.error('Erreur création rapport:', error)
+    console.error('Erreur création prescription:', error)
     return NextResponse.json(
       { error: 'Erreur interne du serveur' },
       { status: 500 }

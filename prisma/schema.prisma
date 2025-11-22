@@ -1,4 +1,3 @@
-// prisma/schema.prisma
 generator client {
   provider = "prisma-client-js"
 }
@@ -19,11 +18,9 @@ model User {
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
-  // Relations selon le rôle
   patient       Patient?
   professional  Professional?
   
-  // Relations NextAuth
   sessions      Session[]
   accounts      Account[]
 
@@ -31,39 +28,76 @@ model User {
 }
 
 model Patient {
-  id              String   @id @default(cuid())
-  userId          String   @unique
-  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
-  // Informations médicales
-  birthDate       DateTime?
-  bloodType       BloodType?
-  height          Int?     // en cm
-  weight          Int?     // en kg
-  gender          Gender?
-  
-  // Relations
-  appointments    Appointment[]
-  prescriptions   Prescription[]
-  medicalRecords  MedicalRecord[]
-  vitalSigns      VitalSign[]
-  
-  @@map("patients")
-}
-
-model Professional {
   id          String   @id @default(cuid())
   userId      String   @unique
   user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
-  specialty   String
-  licenseNumber String?
   phone       String?
-  
-  // Relations
+  dateOfBirth DateTime?
+  gender      String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  medicalRecord   MedicalRecord?
   appointments    Appointment[]
-  prescriptions   Prescription[]
-  availabilities  Availability[]  // ← AJOUTÉ ICI
+  prescriptions   Prescription[]  
+  vitalSigns      VitalSign[]     
+  medicalReports  MedicalReport[]
+
+  @@map("patients")
+}
+
+model MedicalRecord {
+  id               String   @id @default(cuid())
+  patientId        String   @unique
+  patient          Patient  @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  bloodType        String?
+  height           Int?     // en cm
+  weight           Float?   // en kg
+  allergies        String[]
+  medications      String[]
+  conditions       String[]
+  emergencyContact String?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@map("medical_records")
+}
+
+model MedicalReport {
+  id              String        @id @default(cuid())
+  patientId       String
+  professionalId  String
+  title           String
+  recordType      ReportType
+  content         String
+  diagnosis       String?
+  treatment       String?
+  prescriptions   String[]
+  recommendations String?
+  severity        SeverityLevel
+  followUpDate    DateTime?
+  
+  patient       Patient     @relation(fields: [patientId], references: [id])
+  professional  Professional @relation(fields: [professionalId], references: [id])
+  
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  @@map("medical_reports")
+}
+
+model Professional {
+  id            String   @id @default(cuid())
+  userId        String   @unique
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  specialty     String
+  licenseNumber String?
+  phone         String?
+  
+  appointments    Appointment[]
+  prescriptions   Prescription[] 
+  availabilities  Availability[]
+  medicalReports  MedicalReport[]
   
   @@map("professionals")
 }
@@ -98,14 +132,16 @@ model Account {
 }
 
 model Appointment {
-  id           String     @id @default(cuid())
-  patientId    String
+  id             String     @id @default(cuid())
+  patientId      String
   professionalId String
-  date         DateTime
-  duration     Int       // en minutes
-  status       AppointmentStatus @default(SCHEDULED)
-  reason       String?
-  notes        String?
+  date           DateTime
+  duration       Int     
+  status         AppointmentStatus @default(SCHEDULED)
+  reason         String?
+  notes          String?
+  diagnosis      String?   
+  treatment      String?  
   
   patient      Patient     @relation(fields: [patientId], references: [id])
   professional Professional @relation(fields: [professionalId], references: [id])
@@ -114,42 +150,6 @@ model Appointment {
   updatedAt    DateTime @updatedAt
   
   @@map("appointments")
-}
-
-model Prescription {
-  id           String   @id @default(cuid())
-  patientId    String
-  professionalId String
-  medication   String
-  dosage       String
-  frequency    String
-  duration     String   // "7 jours", "1 mois", etc.
-  instructions String?
-  
-  patient      Patient     @relation(fields: [patientId], references: [id])
-  professional Professional @relation(fields: [professionalId], references: [id])
-  
-  prescribedAt DateTime @default(now())
-  
-  @@map("prescriptions")
-}
-
-model MedicalRecord {
-  id          String   @id @default(cuid())
-  patientId   String
-  recordType  RecordType
-  title       String
-  description String?
-  severity    SeverityLevel?
-  date        DateTime
-  createdBy   String   // ID du professionnel
-  
-  patient     Patient  @relation(fields: [patientId], references: [id])
-  
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  
-  @@map("medical_records")
 }
 
 model VitalSign {
@@ -182,7 +182,24 @@ model Availability {
   
   @@unique([professionalId, dayOfWeek])
 }
-
+model Prescription {
+  id             String             @id @default(cuid())
+  patientId      String
+  professionalId String
+  medication     String
+  dosage         String
+  frequency      String
+  duration       String  
+  instructions   String?
+  status         PrescriptionStatus @default(ACTIVE)
+  
+  patient      Patient     @relation(fields: [patientId], references: [id])
+  professional Professional @relation(fields: [professionalId], references: [id])
+  
+  prescribedAt DateTime @default(now())
+  
+  @@map("prescriptions")
+}
 model Break {
   id              String   @id @default(cuid())
   availabilityId  String
@@ -194,11 +211,15 @@ model Break {
   createdAt       DateTime @default(now())
 }
 
-// ENUMS
 enum UserRole {
   PATIENT
   DOCTOR
   ADMIN
+}
+enum PrescriptionStatus {
+  ACTIVE
+  COMPLETED
+  CANCELLED
 }
 
 enum BloodType {
@@ -235,6 +256,16 @@ enum RecordType {
   IMAGING
   NOTE
   VACCINATION
+}
+
+enum ReportType {
+  NOTE
+  CONDITION
+  PROCEDURE
+  LAB_RESULT
+  IMAGING
+  VACCINATION
+  CONSULTATION
 }
 
 enum SeverityLevel {

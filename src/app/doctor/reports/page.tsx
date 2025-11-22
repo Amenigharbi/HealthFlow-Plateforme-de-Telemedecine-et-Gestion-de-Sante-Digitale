@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react'
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import LoadingSpinner from '../../components/UI/LoadingSpinner'
+import ReportEditor from '../../components/MedicalReport/ReportEditor'
 
 interface MedicalReport {
   id: string
@@ -14,10 +15,16 @@ interface MedicalReport {
   severity?: string
 }
 
+interface Patient {
+  id: string
+  name: string
+}
+
 export default function DoctorReportsPage() {
   const { data: session, status } = useSession()
   const router = useRouter()
   const [reports, setReports] = useState<MedicalReport[]>([])
+  const [patients, setPatients] = useState<Patient[]>([])
   const [loading, setLoading] = useState(true)
   const [showNewReport, setShowNewReport] = useState(false)
 
@@ -28,21 +35,50 @@ export default function DoctorReportsPage() {
       return
     }
 
-    loadReports()
+    loadData()
   }, [session, status, router])
 
-  const loadReports = async () => {
+  const loadData = async () => {
     try {
       setLoading(true)
-      const response = await fetch('/api/doctor/reports')
-      if (response.ok) {
-        const data = await response.json()
-        setReports(data.reports)
+      
+      const reportsResponse = await fetch('/api/doctor/reports')
+      if (reportsResponse.ok) {
+        const reportsData = await reportsResponse.json()
+        setReports(reportsData.reports)
+      }
+
+      const patientsResponse = await fetch('/api/doctor/patients')
+      if (patientsResponse.ok) {
+        const patientsData = await patientsResponse.json()
+        setPatients(patientsData.patients)
       }
     } catch (error) {
-      console.error('Erreur chargement rapports:', error)
+      console.error('Erreur chargement données:', error)
     } finally {
       setLoading(false)
+    }
+  }
+
+  const handleSaveReport = async (reportData: any) => {
+    try {
+      const response = await fetch('/api/doctor/reports', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(reportData)
+      })
+
+      if (response.ok) {
+        setShowNewReport(false)
+        loadData() 
+      } else {
+        alert('Erreur lors de la création du rapport')
+      }
+    } catch (error) {
+      console.error('Erreur création rapport:', error)
+      alert('Erreur lors de la création du rapport')
     }
   }
 
@@ -180,9 +216,10 @@ export default function DoctorReportsPage() {
         </div>
       </div>
 
+      {/* Modal de création de rapport */}
       {showNewReport && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-3xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+          <div className="bg-white rounded-3xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
             <div className="sticky top-0 bg-white border-b border-gray-200 p-6 flex justify-between items-center">
               <h2 className="text-xl font-bold text-gray-900">Nouveau rapport médical</h2>
               <button
@@ -194,17 +231,11 @@ export default function DoctorReportsPage() {
             </div>
             
             <div className="p-6">
-              <div className="text-center py-12">
-                <div className="text-gray-400 text-6xl mb-4">📝</div>
-                <h3 className="text-xl font-semibold text-gray-900 mb-2">Fonctionnalité en développement</h3>
-                <p className="text-gray-600 mb-6">L'éditeur de rapports médicaux sera disponible prochainement.</p>
-                <button
-                  onClick={() => setShowNewReport(false)}
-                  className="bg-cyan-500 text-white px-6 py-3 rounded-xl font-semibold hover:bg-cyan-600 transition-colors"
-                >
-                  Compris
-                </button>
-              </div>
+              <ReportEditor
+                patients={patients}
+                onSave={handleSaveReport}
+                onCancel={() => setShowNewReport(false)}
+              />
             </div>
           </div>
         </div>
