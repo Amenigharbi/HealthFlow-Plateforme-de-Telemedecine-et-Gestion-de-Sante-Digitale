@@ -74,7 +74,7 @@ export default function PrescriptionEditor({ patients, onSave, onCancel, initial
                 required
                 value={formData.patientId}
                 onChange={(e) => setFormData(prev => ({ ...prev, patientId: e.target.value }))}
-                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent text-gray-900 bg-white"
               >
                 <option value="">Sélectionner un patient</option>
                 {patients.map(patient => (
@@ -95,7 +95,7 @@ export default function PrescriptionEditor({ patients, onSave, onCancel, initial
                 required
                 value={formData.medication}
                 onChange={(e) => setFormData(prev => ({ ...prev, medication: e.target.value }))}
-                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent text-gray-900 bg-white"
                 placeholder="Nom du médicament"
               />
             </div>
@@ -111,7 +111,7 @@ export default function PrescriptionEditor({ patients, onSave, onCancel, initial
                   required
                   value={formData.dosage}
                   onChange={(e) => setFormData(prev => ({ ...prev, dosage: e.target.value }))}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent text-gray-900 bg-white"
                   placeholder="Ex: 1 comprimé, 500mg"
                 />
               </div>
@@ -124,7 +124,7 @@ export default function PrescriptionEditor({ patients, onSave, onCancel, initial
                   required
                   value={formData.frequency}
                   onChange={(e) => setFormData(prev => ({ ...prev, frequency: e.target.value }))}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent text-gray-900 bg-white"
                 >
                   <option value="">Sélectionner</option>
                   <option value="1 fois par jour">1 fois par jour</option>
@@ -150,7 +150,7 @@ export default function PrescriptionEditor({ patients, onSave, onCancel, initial
                 required
                 value={formData.duration}
                 onChange={(e) => setFormData(prev => ({ ...prev, duration: e.target.value }))}
-                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent text-gray-900 bg-white"
               >
                 <option value="">Sélectionner</option>
                 <option value="5 jours">5 jours</option>
@@ -176,7 +176,7 @@ export default function PrescriptionEditor({ patients, onSave, onCancel, initial
                 value={formData.instructions}
                 onChange={(e) => setFormData(prev => ({ ...prev, instructions: e.target.value }))}
                 rows={3}
-                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent text-gray-900 bg-white"
                 placeholder="Instructions, précautions, modalités de prise..."
               />
             </div>

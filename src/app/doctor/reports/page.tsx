@@ -9,10 +9,17 @@ interface MedicalReport {
   id: string
   title: string
   patientName: string
+  patientId: string
   recordType: string
+  content: string
+  diagnosis?: string
+  treatment?: string
+  prescriptions?: string[]
+  recommendations?: string
+  severity: string
+  followUpDate?: string
   date: string
   status: string
-  severity?: string
 }
 
 interface Patient {
@@ -27,6 +34,8 @@ export default function DoctorReportsPage() {
   const [patients, setPatients] = useState<Patient[]>([])
   const [loading, setLoading] = useState(true)
   const [showNewReport, setShowNewReport] = useState(false)
+  const [editingReport, setEditingReport] = useState<MedicalReport | null>(null)
+  const [viewingReport, setViewingReport] = useState<MedicalReport | null>(null)
 
   useEffect(() => {
     if (status === 'loading') return
@@ -62,8 +71,14 @@ export default function DoctorReportsPage() {
 
   const handleSaveReport = async (reportData: any) => {
     try {
-      const response = await fetch('/api/doctor/reports', {
-        method: 'POST',
+      const url = editingReport 
+        ? `/api/doctor/reports/${editingReport.id}`
+        : '/api/doctor/reports'
+      
+      const method = editingReport ? 'PUT' : 'POST'
+
+      const response = await fetch(url, {
+        method,
         headers: {
           'Content-Type': 'application/json'
         },
@@ -72,13 +87,72 @@ export default function DoctorReportsPage() {
 
       if (response.ok) {
         setShowNewReport(false)
+        setEditingReport(null)
         loadData() 
       } else {
-        alert('Erreur lors de la création du rapport')
+        alert('Erreur lors de la sauvegarde du rapport')
       }
     } catch (error) {
-      console.error('Erreur création rapport:', error)
-      alert('Erreur lors de la création du rapport')
+      console.error('Erreur sauvegarde rapport:', error)
+      alert('Erreur lors de la sauvegarde du rapport')
+    }
+  }
+
+  const handleDeleteReport = async (reportId: string) => {
+    if (!confirm('Êtes-vous sûr de vouloir supprimer ce rapport ?')) {
+      return
+    }
+
+    try {
+      const response = await fetch(`/api/doctor/reports/${reportId}`, {
+        method: 'DELETE'
+      })
+
+      if (response.ok) {
+        loadData()
+        setViewingReport(null)
+      } else {
+        alert('Erreur lors de la suppression du rapport')
+      }
+    } catch (error) {
+      console.error('Erreur suppression rapport:', error)
+      alert('Erreur lors de la suppression du rapport')
+    }
+  }
+
+  const getRecordTypeLabel = (recordType: string) => {
+    const types: { [key: string]: string } = {
+      'NOTE': 'Note médicale',
+      'CONDITION': 'Diagnostic',
+      'PROCEDURE': 'Procédure',
+      'LAB_RESULT': 'Résultat d\'analyse',
+      'IMAGING': 'Compte-rendu d\'imagerie'
+    }
+    return types[recordType] || recordType
+  }
+
+  const getSeverityLabel = (severity: string) => {
+    const severities: { [key: string]: string } = {
+      'LOW': 'Normal',
+      'MEDIUM': 'Important',
+      'HIGH': 'Urgent',
+      'CRITICAL': 'Critique'
+    }
+    return severities[severity] || severity
+  }
+
+  const prepareReportForEdit = (report: MedicalReport) => {
+    return {
+      patientId: report.patientId,
+      title: report.title,
+      recordType: report.recordType,
+      content: report.content,
+      diagnosis: report.diagnosis || '',
+      treatment: report.treatment || '',
+      prescriptions: report.prescriptions || [],
+      recommendations: report.recommendations || '',
+      severity: report.severity,
+      followUpDate: report.followUpDate || ''
     }
   }
 
@@ -163,15 +237,14 @@ export default function DoctorReportsPage() {
                     <div className="flex items-center space-x-3">
                       <span
                         className={`px-3 py-1 rounded-full text-sm font-medium ${
-                          report.severity === 'HIGH'
+                          report.severity === 'HIGH' || report.severity === 'CRITICAL'
                             ? 'bg-red-100 text-red-800'
                             : report.severity === 'MEDIUM'
                             ? 'bg-orange-100 text-orange-800'
                             : 'bg-green-100 text-green-800'
                         }`}
                       >
-                        {report.severity === 'HIGH' ? 'Urgent' : 
-                         report.severity === 'MEDIUM' ? 'Important' : 'Normal'}
+                        {getSeverityLabel(report.severity)}
                       </span>
                       <span className="text-sm text-gray-500">
                         {new Date(report.date).toLocaleDateString('fr-FR')}
@@ -186,23 +259,26 @@ export default function DoctorReportsPage() {
                           ? 'bg-blue-100 text-blue-800'
                           : report.recordType === 'PROCEDURE'
                           ? 'bg-purple-100 text-purple-800'
+                          : report.recordType === 'CONDITION'
+                          ? 'bg-green-100 text-green-800'
                           : 'bg-gray-100 text-gray-800'
                       }`}
                     >
-                      {report.recordType === 'NOTE' ? 'Note médicale' :
-                       report.recordType === 'PROCEDURE' ? 'Procédure' :
-                       report.recordType === 'CONDITION' ? 'Diagnostic' : 'Rapport'}
+                      {getRecordTypeLabel(report.recordType)}
                     </span>
 
                     <div className="flex space-x-2">
                       <button
-                        onClick={() => router.push(`/doctor/reports/${report.id}`)}
+                        onClick={() => setViewingReport(report)}
                         className="px-4 py-2 text-cyan-600 border border-cyan-300 rounded-xl hover:bg-cyan-50 transition-colors"
                       >
                         Voir
                       </button>
                       <button
-                        onClick={() => router.push(`/doctor/reports/${report.id}/edit`)}
+                        onClick={() => {
+                          setEditingReport(report)
+                          setShowNewReport(true)
+                        }}
                         className="px-4 py-2 text-green-600 border border-green-300 rounded-xl hover:bg-green-50 transition-colors"
                       >
                         Modifier
@@ -216,14 +292,18 @@ export default function DoctorReportsPage() {
         </div>
       </div>
 
-      {/* Modal de création de rapport */}
-      {showNewReport && (
+      {(showNewReport || editingReport) && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-3xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
             <div className="sticky top-0 bg-white border-b border-gray-200 p-6 flex justify-between items-center">
-              <h2 className="text-xl font-bold text-gray-900">Nouveau rapport médical</h2>
+              <h2 className="text-xl font-bold text-gray-900">
+                {editingReport ? 'Modifier le rapport' : 'Nouveau rapport médical'}
+              </h2>
               <button
-                onClick={() => setShowNewReport(false)}
+                onClick={() => {
+                  setShowNewReport(false)
+                  setEditingReport(null)
+                }}
                 className="text-gray-400 hover:text-gray-600 text-2xl"
               >
                 ×
@@ -234,8 +314,158 @@ export default function DoctorReportsPage() {
               <ReportEditor
                 patients={patients}
                 onSave={handleSaveReport}
-                onCancel={() => setShowNewReport(false)}
+                onCancel={() => {
+                  setShowNewReport(false)
+                  setEditingReport(null)
+                }}
+                initialData={editingReport ? prepareReportForEdit(editingReport) : undefined}
               />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {viewingReport && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-3xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="sticky top-0 bg-white border-b border-gray-200 p-6 flex justify-between items-center">
+              <h2 className="text-xl font-bold text-gray-900">{viewingReport.title}</h2>
+              <button
+                onClick={() => setViewingReport(null)}
+                className="text-gray-400 hover:text-gray-600 text-2xl"
+              >
+                ×
+              </button>
+            </div>
+            
+            <div className="p-6 space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Patient
+                  </label>
+                  <p className="text-gray-900 bg-gray-50 px-4 py-3 rounded-xl border border-gray-200">
+                    {viewingReport.patientName}
+                  </p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Type de rapport
+                  </label>
+                  <p className="text-gray-900 bg-gray-50 px-4 py-3 rounded-xl border border-gray-200">
+                    {getRecordTypeLabel(viewingReport.recordType)}
+                  </p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Niveau de sévérité
+                  </label>
+                  <p className="text-gray-900 bg-gray-50 px-4 py-3 rounded-xl border border-gray-200">
+                    {getSeverityLabel(viewingReport.severity)}
+                  </p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Date
+                  </label>
+                  <p className="text-gray-900 bg-gray-50 px-4 py-3 rounded-xl border border-gray-200">
+                    {new Date(viewingReport.date).toLocaleDateString('fr-FR')}
+                  </p>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Observations et examen clinique
+                </label>
+                <div className="text-gray-900 bg-gray-50 px-4 py-3 rounded-xl border border-gray-200 whitespace-pre-wrap">
+                  {viewingReport.content}
+                </div>
+              </div>
+
+              {viewingReport.diagnosis && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Diagnostic
+                  </label>
+                  <div className="text-gray-900 bg-gray-50 px-4 py-3 rounded-xl border border-gray-200">
+                    {viewingReport.diagnosis}
+                  </div>
+                </div>
+              )}
+
+              {viewingReport.treatment && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Traitement prescrit
+                  </label>
+                  <div className="text-gray-900 bg-gray-50 px-4 py-3 rounded-xl border border-gray-200 whitespace-pre-wrap">
+                    {viewingReport.treatment}
+                  </div>
+                </div>
+              )}
+
+              {viewingReport.prescriptions && viewingReport.prescriptions.length > 0 && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Médicaments prescrits
+                  </label>
+                  <div className="space-y-2">
+                    {viewingReport.prescriptions.map((prescription, index) => (
+                      <div key={index} className="text-gray-900 bg-blue-50 px-4 py-3 rounded-xl border border-blue-200">
+                        {prescription}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {viewingReport.recommendations && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Recommandations
+                  </label>
+                  <div className="text-gray-900 bg-gray-50 px-4 py-3 rounded-xl border border-gray-200 whitespace-pre-wrap">
+                    {viewingReport.recommendations}
+                  </div>
+                </div>
+              )}
+
+              {viewingReport.followUpDate && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Date de suivi recommandée
+                  </label>
+                  <div className="text-gray-900 bg-gray-50 px-4 py-3 rounded-xl border border-gray-200">
+                    {new Date(viewingReport.followUpDate).toLocaleDateString('fr-FR')}
+                  </div>
+                </div>
+              )}
+
+              <div className="flex justify-end space-x-4 pt-6 border-t border-gray-200">
+                <button
+                  onClick={() => handleDeleteReport(viewingReport.id)}
+                  className="px-6 py-3 text-red-600 border border-red-300 rounded-xl hover:bg-red-50 transition-colors"
+                >
+                  Supprimer
+                </button>
+                <button
+                  onClick={() => {
+                    setEditingReport(viewingReport)
+                    setViewingReport(null)
+                    setShowNewReport(true)
+                  }}
+                  className="px-6 py-3 text-green-600 border border-green-300 rounded-xl hover:bg-green-50 transition-colors"
+                >
+                  Modifier
+                </button>
+                <button
+                  onClick={() => setViewingReport(null)}
+                  className="px-6 py-3 bg-cyan-500 text-white rounded-xl font-semibold hover:bg-cyan-600 transition-colors"
+                >
+                  Fermer
+                </button>
+              </div>
             </div>
           </div>
         </div>

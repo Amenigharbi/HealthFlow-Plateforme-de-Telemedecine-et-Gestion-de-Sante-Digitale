@@ -16,6 +16,7 @@ interface UserProfile {
 }
 
 const PROFILE_API = '/api/profile'
+const CHANGE_PASSWORD_API = '/api/auth/change-password'
 
 const MEDICAL_SPECIALTIES = [
   'Médecine générale',
@@ -106,6 +107,180 @@ const Icons = {
     <svg {...props} fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
     </svg>
+  ),
+  Lock: (props: { className?: string }) => (
+    <svg {...props} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+    </svg>
+  ),
+  Eye: (props: { className?: string }) => (
+    <svg {...props} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+    </svg>
+  ),
+  EyeOff: (props: { className?: string }) => (
+    <svg {...props} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
+    </svg>
+  )
+}
+
+const ChangePasswordModal = ({ 
+  isOpen, 
+  onClose, 
+  onChangePassword 
+}: { 
+  isOpen: boolean
+  onClose: () => void
+  onChangePassword: (data: { currentPassword: string; newPassword: string; confirmPassword: string }) => Promise<void>
+}) => {
+  const [formData, setFormData] = useState({
+    currentPassword: '',
+    newPassword: '',
+    confirmPassword: ''
+  })
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false)
+  const [showNewPassword, setShowNewPassword] = useState(false)
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setError('')
+    setLoading(true)
+
+    try {
+      await onChangePassword(formData)
+      setFormData({ currentPassword: '', newPassword: '', confirmPassword: '' })
+      onClose()
+    } catch (err: any) {
+      setError(err.message || 'Une erreur est survenue')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleClose = () => {
+    setFormData({ currentPassword: '', newPassword: '', confirmPassword: '' })
+    setError('')
+    onClose()
+  }
+
+  if (!isOpen) return null
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-2xl shadow-xl w-full max-w-md">
+        <div className="bg-linear-to-r from-cyan-500 to-blue-600 px-6 py-4 rounded-t-2xl">
+          <h2 className="text-xl font-bold text-white">Changer le mot de passe</h2>
+        </div>
+        
+        <form onSubmit={handleSubmit} className="p-6 space-y-4">
+          {error && (
+            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl text-sm">
+              {error}
+            </div>
+          )}
+
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-2">
+              Mot de passe actuel
+            </label>
+            <div className="relative">
+              <input
+                type={showCurrentPassword ? "text" : "password"}
+                value={formData.currentPassword}
+                onChange={(e) => setFormData(prev => ({ ...prev, currentPassword: e.target.value }))}
+                className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-all duration-200 bg-gray-50 focus:bg-white text-gray-900 pr-12"
+                required
+              />
+              <button
+                type="button"
+                onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
+              >
+                {showCurrentPassword ? <Icons.EyeOff className="w-5 h-5" /> : <Icons.Eye className="w-5 h-5" />}
+              </button>
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-2">
+              Nouveau mot de passe
+            </label>
+            <div className="relative">
+              <input
+                type={showNewPassword ? "text" : "password"}
+                value={formData.newPassword}
+                onChange={(e) => setFormData(prev => ({ ...prev, newPassword: e.target.value }))}
+                className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-all duration-200 bg-gray-50 focus:bg-white text-gray-900 pr-12"
+                required
+                minLength={6}
+              />
+              <button
+                type="button"
+                onClick={() => setShowNewPassword(!showNewPassword)}
+                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
+              >
+                {showNewPassword ? <Icons.EyeOff className="w-5 h-5" /> : <Icons.Eye className="w-5 h-5" />}
+              </button>
+            </div>
+            <p className="text-xs text-gray-500 mt-1">Minimum 6 caractères</p>
+          </div>
+
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-2">
+              Confirmer le nouveau mot de passe
+            </label>
+            <div className="relative">
+              <input
+                type={showConfirmPassword ? "text" : "password"}
+                value={formData.confirmPassword}
+                onChange={(e) => setFormData(prev => ({ ...prev, confirmPassword: e.target.value }))}
+                className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-all duration-200 bg-gray-50 focus:bg-white text-gray-900 pr-12"
+                required
+              />
+              <button
+                type="button"
+                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
+              >
+                {showConfirmPassword ? <Icons.EyeOff className="w-5 h-5" /> : <Icons.Eye className="w-5 h-5" />}
+              </button>
+            </div>
+          </div>
+
+          <div className="flex space-x-3 pt-4">
+            <button
+              type="button"
+              onClick={handleClose}
+              className="flex-1 px-4 py-3 border-2 border-gray-300 text-gray-700 rounded-xl font-semibold hover:bg-gray-50 transition-all duration-200"
+            >
+              Annuler
+            </button>
+            <button
+              type="submit"
+              disabled={loading}
+              className="flex-1 bg-cyan-500 text-white px-4 py-3 rounded-xl font-semibold hover:bg-cyan-600 transition-all duration-200 disabled:opacity-50 flex items-center justify-center space-x-2"
+            >
+              {loading ? (
+                <>
+                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  <span>Changement...</span>
+                </>
+              ) : (
+                <>
+                  <Icons.Lock className="w-5 h-5" />
+                  <span>Changer</span>
+                </>
+              )}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
   )
 }
 
@@ -126,6 +301,7 @@ export default function ProfilePage() {
     specialty: ''
   })
   const [saving, setSaving] = useState(false)
+  const [changePasswordModalOpen, setChangePasswordModalOpen] = useState(false)
 
   const isDoctor = session?.user?.role === 'DOCTOR'
   const isPatient = session?.user?.role === 'PATIENT'
@@ -160,10 +336,44 @@ export default function ProfilePage() {
     }
   }
 
+  const calculateCompletion = (profile: UserProfile | null): number => {
+    if (!profile) return 0
+
+    const requiredFields = {
+      name: profile.name?.trim() !== '',
+      email: profile.email?.trim() !== '',
+      phone: profile.phone?.trim() !== '',
+      address: profile.address?.trim() !== '',
+    }
+
+    const doctorFields = {
+      specialty: profile.specialty?.trim() !== '',
+    }
+
+    const patientFields = {
+      birthDate: profile.birthDate?.trim() !== '',
+      emergencyContact: profile.emergencyContact?.trim() !== '',
+    }
+
+    let totalFields = Object.keys(requiredFields).length
+    let completedFields = Object.values(requiredFields).filter(Boolean).length
+
+    if (isDoctor) {
+      totalFields += Object.keys(doctorFields).length
+      completedFields += Object.values(doctorFields).filter(Boolean).length
+    } else if (isPatient) {
+      totalFields += Object.keys(patientFields).length
+      completedFields += Object.values(patientFields).filter(Boolean).length
+    }
+
+    return Math.round((completedFields / totalFields) * 100)
+  }
+
+  const completionPercentage = calculateCompletion(profile)
+
   const handleSave = async () => {
     try {
       setSaving(true)
-      console.log('💾 Sauvegarde des données:', formData)
       
       const dataToSend = isDoctor 
         ? {
@@ -177,7 +387,6 @@ export default function ProfilePage() {
           }
         : formData
 
-      console.log('📤 Données envoyées (adaptées au rôle):', dataToSend)
 
       const response = await fetch(PROFILE_API, {
         method: 'PUT',
@@ -188,13 +397,9 @@ export default function ProfilePage() {
       })
 
       const result = await response.json()
-      console.log('📨 Réponse API complète:', result)
 
-      if (response.ok) {
-        console.log('✅ Sauvegarde réussie')
-        
+      if (response.ok) {        
         if (result.profile) {
-          console.log('📊 Utilisation des données API:', result.profile)
           setProfile(result.profile)
           setFormData(result.profile)
         } else {
@@ -226,6 +431,25 @@ export default function ProfilePage() {
 
   const handleSpecialtyChange = (specialty: string) => {
     setFormData(prev => ({ ...prev, specialty }))
+  }
+
+  const handleChangePassword = async (passwordData: { currentPassword: string; newPassword: string; confirmPassword: string }) => {
+    const response = await fetch(CHANGE_PASSWORD_API, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(passwordData)
+    })
+
+    const result = await response.json()
+
+    if (response.ok) {
+      alert(result.message || 'Mot de passe modifié avec succès!')
+      return
+    } else {
+      throw new Error(result.error || 'Erreur lors du changement de mot de passe')
+    }
   }
 
   const getInitials = (name: string) => {
@@ -371,75 +595,82 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="min-h-screen bg-linear-to-br from-slate-50 via-blue-50 to-cyan-100 py-8">
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-6xl">
-        
-        <ProfileHeader 
-          profile={profile} 
-          editing={editing} 
-          getInitials={getInitials}
-          isDoctor={isDoctor}
-        />
-
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+    <>
+      <div className="min-h-screen bg-linear-to-br from-slate-50 via-blue-50 to-cyan-100 py-8">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-6xl">
           
-          <div className="lg:col-span-2">
-            <div className="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
-              
-              <div className="bg-linear-to-r from-cyan-500 to-blue-600 px-8 py-6">
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
-                  <div>
-                    <h2 className="text-2xl font-bold text-white">
-                      {isDoctor ? 'Informations Professionnelles' : 'Informations Personnelles'}
-                    </h2>
-                    <p className="text-cyan-100 mt-1">
-                      {isDoctor ? 'Vos informations professionnelles' : 'Vos données personnelles et de contact'}
-                    </p>
+          <ProfileHeader 
+            profile={profile} 
+            editing={editing} 
+            getInitials={getInitials}
+            isDoctor={isDoctor}
+          />
+
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            
+            <div className="lg:col-span-2">
+              <div className="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
+                
+                <div className="bg-linear-to-r from-cyan-500 to-blue-600 px-8 py-6">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+                    <div>
+                      <h2 className="text-2xl font-bold text-white">
+                        {isDoctor ? 'Informations Professionnelles' : 'Informations Personnelles'}
+                      </h2>
+                      <p className="text-cyan-100 mt-1">
+                        {isDoctor ? 'Vos informations professionnelles' : 'Vos données personnelles et de contact'}
+                      </p>
+                    </div>
+                    {renderActionButtons()}
                   </div>
-                  {renderActionButtons()}
                 </div>
-              </div>
 
-              <div className="p-8">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                  
-                  {/* Colonne gauche - Champs communs */}
-                  <div className="space-y-6">
-                    {renderField('Nom complet', 'name', Icons.User)}
-                    {renderField('Email', 'email', Icons.Email, 'email')}
-                    {renderField('Téléphone', 'phone', Icons.Phone, 'tel', '+33 1 23 45 67 89')}
+                <div className="p-8">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                     
-                    {/* Spécialité - Dropdown pour les docteurs */}
-                    {isDoctor && renderSpecialtyField()}
-                  </div>
+                    <div className="space-y-6">
+                      {renderField('Nom complet', 'name', Icons.User)}
+                      {renderField('Email', 'email', Icons.Email, 'email')}
+                      {renderField('Téléphone', 'phone', Icons.Phone, 'tel', '+33 1 23 45 67 89')}
+                      
+                      {isDoctor && renderSpecialtyField()}
+                    </div>
 
-                  {/* Colonne droite - Champs spécifiques */}
-                  <div className="space-y-6">
-                    {isPatient ? (
-                      // Champs pour les patients
-                      <>
-                        {renderField('Date de naissance', 'birthDate', Icons.Calendar, 'date')}
-                        {renderField('Contact d\'urgence', 'emergencyContact', Icons.Emergency, 'text', 'Nom et téléphone')}
-                        {renderField('Adresse', 'address', Icons.Location, 'textarea', 'Votre adresse complète')}
-                      </>
-                    ) : (
-                      // Champs pour les docteurs
-                      <>
-                        {renderField('Adresse du cabinet', 'address', Icons.Location, 'textarea', 'Adresse de votre cabinet médical')}
-                      </>
-                    )}
+                    <div className="space-y-6">
+                      {isPatient ? (
+                        <>
+                          {renderField('Date de naissance', 'birthDate', Icons.Calendar, 'date')}
+                          {renderField('Contact d\'urgence', 'emergencyContact', Icons.Emergency, 'text', 'Nom et téléphone')}
+                          {renderField('Adresse', 'address', Icons.Location, 'textarea', 'Votre adresse complète')}
+                        </>
+                      ) : (
+                        <>
+                          {renderField('Adresse du cabinet', 'address', Icons.Location, 'textarea', 'Adresse de votre cabinet médical')}
+                        </>
+                      )}
+                    </div>
+                    
                   </div>
-                  
                 </div>
               </div>
             </div>
+
+            <ProfileSidebar 
+              isDoctor={isDoctor}
+              completionPercentage={completionPercentage}
+              onChangePassword={() => setChangePasswordModalOpen(true)}
+            />
+
           </div>
-
-          <ProfileSidebar isDoctor={isDoctor} />
-
         </div>
       </div>
-    </div>
+
+      <ChangePasswordModal
+        isOpen={changePasswordModalOpen}
+        onClose={() => setChangePasswordModalOpen(false)}
+        onChangePassword={handleChangePassword}
+      />
+    </>
   )
 }
 
@@ -477,74 +708,101 @@ const ProfileHeader = ({
   </div>
 )
 
-const ProfileSidebar = ({ isDoctor }: { isDoctor: boolean }) => (
+const ProfileSidebar = ({ 
+  isDoctor, 
+  completionPercentage, 
+  onChangePassword 
+}: { 
+  isDoctor: boolean
+  completionPercentage: number
+  onChangePassword: () => void
+}) => (
   <div className="space-y-6">
-    <ProfileCompletionCard isDoctor={isDoctor} />
-    <SecurityCard />
-    <HelpCard />
+    <ProfileCompletionCard 
+      isDoctor={isDoctor} 
+      completionPercentage={completionPercentage} 
+    />
+    <SecurityCard onChangePassword={onChangePassword} />
   </div>
 )
 
-const ProfileCompletionCard = ({ isDoctor }: { isDoctor: boolean }) => (
-  <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-6">
-    <h3 className="text-lg font-semibold text-gray-900 mb-4">Statut du profil</h3>
-    <div className="space-y-3">
-      <div className="flex items-center justify-between">
-        <span className="text-gray-600">Complétion</span>
-        <span className="font-semibold text-cyan-600">
-          {isDoctor ? '85%' : '75%'}
-        </span>
+const ProfileCompletionCard = ({ 
+  isDoctor, 
+  completionPercentage 
+}: { 
+  isDoctor: boolean
+  completionPercentage: number
+}) => {
+  const getCompletionColor = (percentage: number) => {
+    if (percentage >= 80) return 'text-green-600'
+    if (percentage >= 60) return 'text-cyan-600'
+    if (percentage >= 40) return 'text-yellow-600'
+    return 'text-red-600'
+  }
+
+  const getCompletionMessage = (percentage: number, isDoctor: boolean) => {
+    if (percentage >= 90) return 'Profil excellent !'
+    if (percentage >= 70) return 'Profil bien complété'
+    if (percentage >= 50) return 'Profil moyennement complété'
+    if (percentage >= 30) return 'Profil à compléter'
+    return 'Profil très incomplet'
+  }
+
+  return (
+    <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-6">
+      <h3 className="text-lg font-semibold text-gray-900 mb-4">Statut du profil</h3>
+      <div className="space-y-3">
+        <div className="flex items-center justify-between">
+          <span className="text-gray-600">Complétion</span>
+          <span className={`font-semibold ${getCompletionColor(completionPercentage)}`}>
+            {completionPercentage}%
+          </span>
+        </div>
+        <div className="w-full bg-gray-200 rounded-full h-2">
+          <div 
+            className="h-2 rounded-full transition-all duration-500 ease-out"
+            style={{ 
+              width: `${completionPercentage}%`,
+              backgroundColor: completionPercentage >= 80 ? '#059669' : 
+                             completionPercentage >= 60 ? '#0891b2' : 
+                             completionPercentage >= 40 ? '#d97706' : '#dc2626'
+            }}
+          ></div>
+        </div>
+        <p className="text-sm text-gray-500 mt-2">
+          {getCompletionMessage(completionPercentage, isDoctor)}
+        </p>
+        {completionPercentage < 100 && (
+          <p className="text-xs text-gray-400">
+            Complétez les informations manquantes pour améliorer votre expérience
+          </p>
+        )}
       </div>
-      <div className="w-full bg-gray-200 rounded-full h-2">
-        <div 
-          className="bg-cyan-500 h-2 rounded-full" 
-          style={{ width: isDoctor ? '85%' : '75%' }}
-        ></div>
-      </div>
-      <p className="text-sm text-gray-500 mt-2">
-        {isDoctor 
-          ? 'Votre profil médecin est presque complet' 
-          : 'Complétez vos informations pour améliorer votre expérience'
-        }
-      </p>
     </div>
-  </div>
-)
+  )
+}
 
-const SecurityCard = () => (
+const SecurityCard = ({ onChangePassword }: { onChangePassword: () => void }) => (
   <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-6">
     <h3 className="text-lg font-semibold text-gray-900 mb-4">Sécurité</h3>
     <div className="space-y-4">
       <div className="flex items-center space-x-3">
         <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
-          <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-          </svg>
+          <Icons.Lock className="w-5 h-5 text-green-600" />
         </div>
         <div>
-          <p className="font-medium text-gray-900">Données sécurisées</p>
-          <p className="text-sm text-gray-500">Chiffrement SSL activé</p>
+          <p className="font-medium text-gray-900">Compte sécurisé</p>
+          <p className="text-sm text-gray-500">Authentification active</p>
         </div>
       </div>
       
-      <button className="w-full bg-gray-50 text-gray-700 py-2.5 rounded-xl font-medium hover:bg-gray-100 transition-colors flex items-center justify-center space-x-2">
-        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
-        </svg>
+      <button 
+        onClick={onChangePassword}
+        className="w-full bg-gray-50 text-gray-700 py-2.5 rounded-xl font-medium hover:bg-gray-100 transition-colors flex items-center justify-center space-x-2"
+      >
+        <Icons.Lock className="w-4 h-4" />
         <span>Changer le mot de passe</span>
       </button>
     </div>
-  </div>
-)
-
-const HelpCard = () => (
-  <div className="bg-linear-to-r from-cyan-500 to-blue-600 rounded-2xl shadow-xl p-6 text-white">
-    <h3 className="text-lg font-semibold mb-2">Besoin d'aide ?</h3>
-    <p className="text-cyan-100 text-sm mb-4">
-      Notre équipe est là pour vous accompagner
-    </p>
-    <button className="w-full bg-white text-cyan-600 py-2.5 rounded-xl font-semibold hover:bg-gray-50 transition-colors">
-      Contacter le support
-    </button>
   </div>
 )

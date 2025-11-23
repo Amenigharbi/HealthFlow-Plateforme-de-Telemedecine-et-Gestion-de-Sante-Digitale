@@ -1,5 +1,5 @@
 'use client'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 
 interface Patient {
   id: string
@@ -23,25 +23,42 @@ interface ReportEditorProps {
   patients: Patient[]
   onSave: (data: ReportFormData) => Promise<void>
   onCancel: () => void
-  initialData?: Partial<ReportFormData>
+  initialData?: ReportFormData
 }
 
 export default function ReportEditor({ patients, onSave, onCancel, initialData }: ReportEditorProps) {
   const [formData, setFormData] = useState<ReportFormData>({
-    patientId: initialData?.patientId || '',
-    title: initialData?.title || '',
-    recordType: initialData?.recordType || 'NOTE',
-    content: initialData?.content || '',
-    diagnosis: initialData?.diagnosis || '',
-    treatment: initialData?.treatment || '',
-    prescriptions: initialData?.prescriptions || [],
-    recommendations: initialData?.recommendations || '',
-    severity: initialData?.severity || 'LOW',
-    followUpDate: initialData?.followUpDate || ''
+    patientId: '',
+    title: '',
+    recordType: 'NOTE',
+    content: '',
+    diagnosis: '',
+    treatment: '',
+    prescriptions: [],
+    recommendations: '',
+    severity: 'LOW',
+    followUpDate: ''
   })
 
   const [newPrescription, setNewPrescription] = useState('')
   const [saving, setSaving] = useState(false)
+
+  useEffect(() => {
+    if (initialData) {
+      setFormData({
+        patientId: initialData.patientId || '',
+        title: initialData.title || '',
+        recordType: initialData.recordType || 'NOTE',
+        content: initialData.content || '',
+        diagnosis: initialData.diagnosis || '',
+        treatment: initialData.treatment || '',
+        prescriptions: initialData.prescriptions || [],
+        recommendations: initialData.recommendations || '',
+        severity: initialData.severity || 'LOW',
+        followUpDate: initialData.followUpDate || ''
+      })
+    }
+  }, [initialData])
 
   const addPrescription = () => {
     if (newPrescription.trim() && !formData.prescriptions?.includes(newPrescription.trim())) {
@@ -62,6 +79,12 @@ export default function ReportEditor({ patients, onSave, onCancel, initialData }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    
+    if (!formData.patientId || !formData.title || !formData.content) {
+      alert('Veuillez remplir tous les champs obligatoires')
+      return
+    }
+
     setSaving(true)
     try {
       await onSave(formData)
@@ -82,7 +105,7 @@ export default function ReportEditor({ patients, onSave, onCancel, initialData }
             required
             value={formData.patientId}
             onChange={(e) => setFormData(prev => ({ ...prev, patientId: e.target.value }))}
-            className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-cyan-500 focus:border-transparent"
+            className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-cyan-500 focus:border-transparent text-gray-900 bg-white"
           >
             <option value="">Sélectionner un patient</option>
             {patients.map(patient => (
@@ -102,7 +125,7 @@ export default function ReportEditor({ patients, onSave, onCancel, initialData }
             required
             value={formData.title}
             onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
-            className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-cyan-500 focus:border-transparent"
+            className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-cyan-500 focus:border-transparent text-gray-900 bg-white"
             placeholder="Ex: Consultation de suivi"
           />
         </div>
@@ -118,7 +141,7 @@ export default function ReportEditor({ patients, onSave, onCancel, initialData }
             required
             value={formData.recordType}
             onChange={(e) => setFormData(prev => ({ ...prev, recordType: e.target.value }))}
-            className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-cyan-500 focus:border-transparent"
+            className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-cyan-500 focus:border-transparent text-gray-900 bg-white"
           >
             <option value="NOTE">Note médicale</option>
             <option value="CONDITION">Diagnostic</option>
@@ -136,7 +159,7 @@ export default function ReportEditor({ patients, onSave, onCancel, initialData }
             required
             value={formData.severity}
             onChange={(e) => setFormData(prev => ({ ...prev, severity: e.target.value }))}
-            className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-cyan-500 focus:border-transparent"
+            className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-cyan-500 focus:border-transparent text-gray-900 bg-white"
           >
             <option value="LOW">Normal</option>
             <option value="MEDIUM">Important</option>
@@ -156,7 +179,7 @@ export default function ReportEditor({ patients, onSave, onCancel, initialData }
           value={formData.content}
           onChange={(e) => setFormData(prev => ({ ...prev, content: e.target.value }))}
           rows={6}
-          className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-cyan-500 focus:border-transparent"
+          className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-cyan-500 focus:border-transparent text-gray-900 bg-white"
           placeholder="Décrivez les symptômes, l'examen clinique, les observations..."
         />
       </div>
@@ -170,7 +193,7 @@ export default function ReportEditor({ patients, onSave, onCancel, initialData }
           type="text"
           value={formData.diagnosis}
           onChange={(e) => setFormData(prev => ({ ...prev, diagnosis: e.target.value }))}
-          className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-cyan-500 focus:border-transparent"
+          className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-cyan-500 focus:border-transparent text-gray-900 bg-white"
           placeholder="Diagnostic principal"
         />
       </div>
@@ -184,7 +207,7 @@ export default function ReportEditor({ patients, onSave, onCancel, initialData }
           value={formData.treatment}
           onChange={(e) => setFormData(prev => ({ ...prev, treatment: e.target.value }))}
           rows={3}
-          className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-cyan-500 focus:border-transparent"
+          className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-cyan-500 focus:border-transparent text-gray-900 bg-white"
           placeholder="Traitement, posologie, durée..."
         />
       </div>
@@ -201,7 +224,7 @@ export default function ReportEditor({ patients, onSave, onCancel, initialData }
               value={newPrescription}
               onChange={(e) => setNewPrescription(e.target.value)}
               onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addPrescription())}
-              className="flex-1 px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-cyan-500 focus:border-transparent"
+              className="flex-1 px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-cyan-500 focus:border-transparent text-gray-900 bg-white"
               placeholder="Ajouter un médicament"
             />
             <button
@@ -238,7 +261,7 @@ export default function ReportEditor({ patients, onSave, onCancel, initialData }
           value={formData.recommendations}
           onChange={(e) => setFormData(prev => ({ ...prev, recommendations: e.target.value }))}
           rows={3}
-          className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-cyan-500 focus:border-transparent"
+          className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-cyan-500 focus:border-transparent text-gray-900 bg-white"
           placeholder="Conseils, suivi recommandé, mode de vie..."
         />
       </div>
@@ -252,7 +275,7 @@ export default function ReportEditor({ patients, onSave, onCancel, initialData }
           type="date"
           value={formData.followUpDate}
           onChange={(e) => setFormData(prev => ({ ...prev, followUpDate: e.target.value }))}
-          className="px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-cyan-500 focus:border-transparent"
+          className="px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-cyan-500 focus:border-transparent text-gray-900 bg-white"
         />
       </div>
 
@@ -270,7 +293,7 @@ export default function ReportEditor({ patients, onSave, onCancel, initialData }
           disabled={saving}
           className="bg-cyan-500 text-white px-6 py-3 rounded-xl font-semibold hover:bg-cyan-600 transition-colors disabled:opacity-50"
         >
-          {saving ? 'Sauvegarde...' : 'Enregistrer le rapport'}
+          {saving ? 'Sauvegarde...' : initialData ? 'Modifier le rapport' : 'Enregistrer le rapport'}
         </button>
       </div>
     </form>

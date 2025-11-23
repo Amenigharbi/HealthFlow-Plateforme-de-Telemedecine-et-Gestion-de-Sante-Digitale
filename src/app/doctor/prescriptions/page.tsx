@@ -46,14 +46,12 @@ export default function DoctorPrescriptionsPage() {
     try {
       setLoading(true)
       
-      // Charger les prescriptions
       const prescriptionsResponse = await fetch('/api/doctor/prescriptions')
       if (prescriptionsResponse.ok) {
         const prescriptionsData = await prescriptionsResponse.json()
         setPrescriptions(prescriptionsData.prescriptions)
       }
 
-      // Charger la liste des patients
       const patientsResponse = await fetch('/api/doctor/patients')
       if (patientsResponse.ok) {
         const patientsData = await patientsResponse.json()
@@ -83,7 +81,7 @@ export default function DoctorPrescriptionsPage() {
 
       if (response.ok) {
         setShowNewPrescription(false)
-        loadData() // Recharger la liste
+        loadData() 
       } else {
         const error = await response.json()
         alert(error.error || 'Erreur lors de la création de la prescription')
@@ -105,7 +103,7 @@ export default function DoctorPrescriptionsPage() {
       })
 
       if (response.ok) {
-        loadData() // Recharger la liste
+        loadData() 
       } else {
         alert('Erreur lors de la mise à jour')
       }
@@ -142,7 +140,6 @@ export default function DoctorPrescriptionsPage() {
             </button>
           </div>
 
-          {/* Filtres et statistiques */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
             <div className="bg-blue-50 rounded-2xl p-4 border border-blue-200">
               <div className="text-2xl font-bold text-blue-700">{prescriptions.length}</div>
@@ -168,7 +165,6 @@ export default function DoctorPrescriptionsPage() {
             </div>
           </div>
 
-          {/* Filtres */}
           <div className="flex space-x-4 mb-6">
             <button
               onClick={() => setFilter('ALL')}
@@ -254,20 +250,20 @@ export default function DoctorPrescriptionsPage() {
                   <div className="space-y-3 mb-4">
                     <div className="flex justify-between">
                       <span className="text-sm text-gray-600">Posologie:</span>
-                      <span className="text-sm font-medium">{prescription.dosage}</span>
+                      <span className="text-sm font-medium text-gray-900">{prescription.dosage}</span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-sm text-gray-600">Fréquence:</span>
-                      <span className="text-sm font-medium">{prescription.frequency}</span>
+                      <span className="text-sm font-medium text-gray-900">{prescription.frequency}</span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-sm text-gray-600">Durée:</span>
-                      <span className="text-sm font-medium">{prescription.duration}</span>
+                      <span className="text-sm font-medium text-gray-900">{prescription.duration}</span>
                     </div>
                     {prescription.instructions && (
                       <div>
                         <span className="text-sm text-gray-600">Instructions:</span>
-                        <p className="text-sm mt-1 text-gray-700">{prescription.instructions}</p>
+                        <p className="text-sm mt-1 text-gray-900">{prescription.instructions}</p>
                       </div>
                     )}
                   </div>
@@ -281,19 +277,12 @@ export default function DoctorPrescriptionsPage() {
                       <select
                         value={prescription.status}
                         onChange={(e) => updatePrescriptionStatus(prescription.id, e.target.value)}
-                        className="text-sm border border-gray-300 rounded-lg px-2 py-1"
+                        className="text-sm border border-gray-300 rounded-lg px-2 py-1 text-gray-900 bg-white"
                       >
                         <option value="ACTIVE">Active</option>
                         <option value="COMPLETED">Terminée</option>
                         <option value="CANCELLED">Annulée</option>
                       </select>
-                      
-                      <button
-                        onClick={() => router.push(`/doctor/prescriptions/${prescription.id}`)}
-                        className="px-3 py-1 text-cyan-600 border border-cyan-300 rounded-lg hover:bg-cyan-50 transition-colors text-sm"
-                      >
-                        Détails
-                      </button>
                     </div>
                   </div>
                 </div>
