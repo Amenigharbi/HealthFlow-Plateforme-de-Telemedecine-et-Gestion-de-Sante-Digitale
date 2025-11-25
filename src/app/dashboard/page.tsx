@@ -14,6 +14,7 @@ export default function DashboardPage() {
     today: 0,
     upcoming: 0
   })
+  const [doctorCount, setDoctorCount] = useState(0)
 
   useEffect(() => {
     if (status === 'loading') return
@@ -24,21 +25,29 @@ export default function DashboardPage() {
   }, [session, status, router])
 
   useEffect(() => {
-    const loadAppointmentStats = async () => {
+    const loadDashboardData = async () => {
       if (!session?.user?.id) return
       
       try {
-        const response = await fetch('/api/appointments/stats')
-        if (response.ok) {
-          const stats = await response.json()
+        const statsResponse = await fetch('/api/appointments/stats')
+        if (statsResponse.ok) {
+          const stats = await statsResponse.json()
           setAppointmentStats(stats)
         }
+
+        if (session.user?.role === 'PATIENT') {
+          const doctorsResponse = await fetch('/api/doctors/count')
+          if (doctorsResponse.ok) {
+            const data = await doctorsResponse.json()
+            setDoctorCount(data.count || 0)
+          }
+        }
       } catch (error) {
-        console.error('Erreur chargement stats:', error)
+        console.error('Erreur chargement données dashboard:', error)
       }
     }
 
-    loadAppointmentStats()
+    loadDashboardData()
   }, [session])
 
   const handleSignOut = async () => {
@@ -82,15 +91,14 @@ export default function DashboardPage() {
     }
   }
 
-  // Actions rapides avec fonctionnalités implémentées
   const getQuickActions = (role: string) => {
     const commonActions = [
       {
-        label: 'Mes dossiers',
-        description: 'Consulter mes documents',
+        label: role === 'DOCTOR' ? 'Documents patients' : 'Mes documents',
+        description: role === 'DOCTOR' ? 'Gérer les documents' : 'Consulter mes documents',
         icon: '📋',
         color: 'blue',
-        onClick: () => router.push('/documents')
+        onClick: () => router.push(role === 'DOCTOR' ? '/doctor/documents' : '/documents')
       }
     ]
 
@@ -172,47 +180,6 @@ export default function DashboardPage() {
 
   const quickActions = getQuickActions(session.user?.role || 'PATIENT')
 
-  const getColorClasses = (color: string) => {
-    switch (color) {
-      case 'cyan':
-        return {
-          border: 'border-cyan-300',
-          bg: 'bg-cyan-50',
-          iconBg: 'bg-cyan-500/10 group-hover:bg-cyan-500/20'
-        }
-      case 'blue':
-        return {
-          border: 'border-blue-300',
-          bg: 'bg-blue-50',
-          iconBg: 'bg-blue-500/10 group-hover:bg-blue-500/20'
-        }
-      case 'green':
-        return {
-          border: 'border-green-300',
-          bg: 'bg-green-50',
-          iconBg: 'bg-green-500/10 group-hover:bg-green-500/20'
-        }
-      case 'purple':
-        return {
-          border: 'border-purple-300',
-          bg: 'bg-purple-50',
-          iconBg: 'bg-purple-500/10 group-hover:bg-purple-500/20'
-        }
-      case 'orange':
-        return {
-          border: 'border-orange-300',
-          bg: 'bg-orange-50',
-          iconBg: 'bg-orange-500/10 group-hover:bg-orange-500/20'
-        }
-      default:
-        return {
-          border: 'border-gray-300',
-          bg: 'bg-gray-50',
-          iconBg: 'bg-gray-500/10 group-hover:bg-gray-500/20'
-        }
-    }
-  }
-
   const getAppointmentStats = () => {
     if (session.user?.role === 'DOCTOR') {
       return [
@@ -250,8 +217,8 @@ export default function DashboardPage() {
           icon: '📋'
         },
         {
-          label: 'Médecins',
-          value: '0',
+          label: 'Médecins consultés',
+          value: doctorCount.toString(),
           color: 'green',
           icon: '👨‍⚕️'
         }
@@ -263,7 +230,6 @@ export default function DashboardPage() {
 
   return (
     <div className="min-h-screen bg-linear-to-br from-slate-50 via-blue-50 to-cyan-50">
-      {/* Modal de réservation de rendez-vous */}
       {showAppointmentBooking && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-3xl max-w-6xl w-full max-h-[90vh] overflow-y-auto">
@@ -314,7 +280,6 @@ export default function DashboardPage() {
 
       <div className="container mx-auto px-6 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Colonne principale */}
           <div className="lg:col-span-2">
             <div className="bg-white rounded-3xl shadow-xl p-8 border border-gray-100">
               <div className="flex items-start justify-between mb-8">
@@ -331,27 +296,35 @@ export default function DashboardPage() {
                 </div>
               </div>
 
-              {/* Statistiques */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
                 {stats.map((stat, index) => (
                   <div 
                     key={index}
-                    className={`bg-linear-to-br from-${stat.color}-50 to-${stat.color}-100 rounded-2xl p-6 border border-${stat.color}-200`}
+                    className="bg-linear-to-br from-white to-gray-50 rounded-2xl p-6 border border-gray-200"
                   >
                     <div className="flex items-center space-x-4">
-                      <div className={`w-12 h-12 bg-${stat.color}-500/20 rounded-xl flex items-center justify-center`}>
+                      <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${
+                        stat.color === 'cyan' ? 'bg-cyan-500/20' :
+                        stat.color === 'blue' ? 'bg-blue-500/20' :
+                        stat.color === 'green' ? 'bg-green-500/20' : 'bg-gray-500/20'
+                      }`}>
                         <span className="text-2xl">{stat.icon}</span>
                       </div>
                       <div>
                         <p className="text-2xl font-bold text-gray-900">{stat.value}</p>
-                        <p className={`text-sm text-${stat.color}-700`}>{stat.label}</p>
+                        <p className={`text-sm ${
+                          stat.color === 'cyan' ? 'text-cyan-700' :
+                          stat.color === 'blue' ? 'text-blue-700' :
+                          stat.color === 'green' ? 'text-green-700' : 'text-gray-700'
+                        }`}>
+                          {stat.label}
+                        </p>
                       </div>
                     </div>
                   </div>
                 ))}
               </div>
 
-              {/* Informations personnelles */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="bg-gray-50 rounded-2xl p-6">
                   <h3 className="font-semibold text-gray-900 mb-4">Informations personnelles</h3>
@@ -393,7 +366,6 @@ export default function DashboardPage() {
               </div>
             </div>
 
-            {/* Section rendez-vous récents (pour les médecins) */}
             {session.user?.role === 'DOCTOR' && (
               <div className="bg-white rounded-3xl shadow-xl p-8 border border-gray-100 mt-8">
                 <h3 className="text-xl font-bold text-gray-900 mb-6">Rendez-vous aujourd'hui</h3>
@@ -411,9 +383,7 @@ export default function DashboardPage() {
             )}
           </div>
 
-          {/* Colonne latérale */}
           <div className="space-y-8">
-            {/* Profil utilisateur */}
             <div className="bg-white rounded-3xl shadow-xl p-6 border border-gray-100">
               <h3 className="font-semibold text-gray-900 mb-4">Votre profil</h3>
               <div className="space-y-4">
@@ -435,55 +405,50 @@ export default function DashboardPage() {
               </div>
             </div>
 
-            {/* Actions rapides */}
             <div className="bg-white rounded-3xl shadow-xl p-6 border border-gray-100">
               <h3 className="font-semibold text-gray-900 mb-4">Actions rapides</h3>
               <div className="space-y-3">
-                {quickActions.map((action, index) => {
-                  const colorClasses = getColorClasses(action.color)
-                  return (
-                    <button
-                      key={index}
-                      onClick={action.onClick}
-                      className="w-full text-left p-4 rounded-xl border border-gray-200 hover:shadow-md transition-all duration-200 group"
-                      style={{
-                        borderColor: action.color === 'cyan' ? '#22d3ee' : 
-                                    action.color === 'blue' ? '#3b82f6' :
-                                    action.color === 'green' ? '#10b981' :
-                                    action.color === 'purple' ? '#8b5cf6' :
-                                    action.color === 'orange' ? '#f59e0b' : '#d1d5db',
-                        backgroundColor: action.color === 'cyan' ? '#f0fdff' : 
-                                        action.color === 'blue' ? '#f0f9ff' :
-                                        action.color === 'green' ? '#f0fdf4' :
-                                        action.color === 'purple' ? '#faf5ff' :
-                                        action.color === 'orange' ? '#fffbeb' : '#f9fafb'
-                      }}
-                    >
-                      <div className="flex items-center space-x-3">
-                        <div 
-                          className="w-10 h-10 rounded-lg flex items-center justify-center transition-colors"
-                          style={{
-                            backgroundColor: action.color === 'cyan' ? 'rgba(34, 211, 238, 0.1)' : 
-                                            action.color === 'blue' ? 'rgba(59, 130, 246, 0.1)' :
-                                            action.color === 'green' ? 'rgba(16, 185, 129, 0.1)' :
-                                            action.color === 'purple' ? 'rgba(139, 92, 246, 0.1)' :
-                                            action.color === 'orange' ? 'rgba(245, 158, 11, 0.1)' : 'rgba(107, 114, 128, 0.1)'
-                          }}
-                        >
-                          <span className="text-lg">{action.icon}</span>
-                        </div>
-                        <div>
-                          <p className="font-medium text-gray-900">{action.label}</p>
-                          <p className="text-sm text-gray-500">{action.description}</p>
-                        </div>
+                {quickActions.map((action, index) => (
+                  <button
+                    key={index}
+                    onClick={action.onClick}
+                    className="w-full text-left p-4 rounded-xl border border-gray-200 hover:shadow-md transition-all duration-200 group"
+                    style={{
+                      borderColor: action.color === 'cyan' ? '#22d3ee' : 
+                                  action.color === 'blue' ? '#3b82f6' :
+                                  action.color === 'green' ? '#10b981' :
+                                  action.color === 'purple' ? '#8b5cf6' :
+                                  action.color === 'orange' ? '#f59e0b' : '#d1d5db',
+                      backgroundColor: action.color === 'cyan' ? '#f0fdff' : 
+                                      action.color === 'blue' ? '#f0f9ff' :
+                                      action.color === 'green' ? '#f0fdf4' :
+                                      action.color === 'purple' ? '#faf5ff' :
+                                      action.color === 'orange' ? '#fffbeb' : '#f9fafb'
+                    }}
+                  >
+                    <div className="flex items-center space-x-3">
+                      <div 
+                        className="w-10 h-10 rounded-lg flex items-center justify-center transition-colors"
+                        style={{
+                          backgroundColor: action.color === 'cyan' ? 'rgba(34, 211, 238, 0.1)' : 
+                                          action.color === 'blue' ? 'rgba(59, 130, 246, 0.1)' :
+                                          action.color === 'green' ? 'rgba(16, 185, 129, 0.1)' :
+                                          action.color === 'purple' ? 'rgba(139, 92, 246, 0.1)' :
+                                          action.color === 'orange' ? 'rgba(245, 158, 11, 0.1)' : 'rgba(107, 114, 128, 0.1)'
+                        }}
+                      >
+                        <span className="text-lg">{action.icon}</span>
                       </div>
-                    </button>
-                  )
-                })}
+                      <div>
+                        <p className="font-medium text-gray-900">{action.label}</p>
+                        <p className="text-sm text-gray-500">{action.description}</p>
+                      </div>
+                    </div>
+                  </button>
+                ))}
               </div>
             </div>
 
-            {/* Notifications rapides */}
             <div className="bg-white rounded-3xl shadow-xl p-6 border border-gray-100">
               <h3 className="font-semibold text-gray-900 mb-4">Notifications</h3>
               <div className="space-y-3">
