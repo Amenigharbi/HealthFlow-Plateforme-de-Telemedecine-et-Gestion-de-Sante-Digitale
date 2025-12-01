@@ -26,7 +26,6 @@ export default function DoctorSelection({
         Choisir un professionnel
       </h3>
       
-      {/* Barre de recherche */}
       <div className="mb-4">
         <input
           type="text"
@@ -37,7 +36,6 @@ export default function DoctorSelection({
         />
       </div>
 
-      {/* Liste des médecins */}
       <div className="space-y-3 max-h-96 overflow-y-auto">
         {filteredDoctors.map((doctor) => (
           <div

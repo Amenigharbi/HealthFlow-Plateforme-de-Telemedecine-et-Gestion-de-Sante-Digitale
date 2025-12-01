@@ -95,7 +95,6 @@ export default function ReportEditor({ patients, onSave, onCancel, initialData }
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      {/* Patient et Titre */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -131,7 +130,6 @@ export default function ReportEditor({ patients, onSave, onCancel, initialData }
         </div>
       </div>
 
-      {/* Type et Sévérité */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -169,7 +167,6 @@ export default function ReportEditor({ patients, onSave, onCancel, initialData }
         </div>
       </div>
 
-      {/* Contenu principal */}
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-2">
           Observations et examen clinique *
@@ -184,7 +181,6 @@ export default function ReportEditor({ patients, onSave, onCancel, initialData }
         />
       </div>
 
-      {/* Diagnostic */}
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-2">
           Diagnostic
@@ -198,7 +194,6 @@ export default function ReportEditor({ patients, onSave, onCancel, initialData }
         />
       </div>
 
-      {/* Traitement */}
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-2">
           Traitement prescrit
@@ -212,7 +207,6 @@ export default function ReportEditor({ patients, onSave, onCancel, initialData }
         />
       </div>
 
-      {/* Prescriptions */}
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-2">
           Médicaments prescrits
@@ -252,7 +246,6 @@ export default function ReportEditor({ patients, onSave, onCancel, initialData }
         </div>
       </div>
 
-      {/* Recommandations */}
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-2">
           Recommandations
@@ -266,7 +259,6 @@ export default function ReportEditor({ patients, onSave, onCancel, initialData }
         />
       </div>
 
-      {/* Date de suivi */}
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-2">
           Date de suivi recommandée
@@ -279,7 +271,6 @@ export default function ReportEditor({ patients, onSave, onCancel, initialData }
         />
       </div>
 
-      {/* Actions */}
       <div className="flex justify-end space-x-4 pt-6 border-t border-gray-200">
         <button
           type="button"

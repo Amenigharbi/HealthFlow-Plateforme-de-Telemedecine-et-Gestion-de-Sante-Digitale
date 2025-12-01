@@ -101,7 +101,7 @@ export default function DoctorsPage() {
                 placeholder="Nom du médecin ou spécialité..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-cyan-500 focus:border-transparent"
+                className="w-full px-4 py-3 border border-gray-900 rounded-xl focus:ring-2 focus:ring-gray-900 focus:border-gray-900 text-gray-900 bg-white"
               />
             </div>
             <div>
@@ -111,7 +111,7 @@ export default function DoctorsPage() {
               <select
                 value={specialtyFilter}
                 onChange={(e) => setSpecialtyFilter(e.target.value)}
-                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-cyan-500 focus:border-transparent"
+                className="w-full px-4 py-3 border border-gray-900 rounded-xl focus:ring-2 focus:ring-gray-900 focus:border-gray-900 text-gray-900 bg-white"
               >
                 <option value="">Toutes les spécialités</option>
                 {specialties.map(specialty => (

@@ -631,7 +631,7 @@ export default function ProfilePage() {
                     <div className="space-y-6">
                       {renderField('Nom complet', 'name', Icons.User)}
                       {renderField('Email', 'email', Icons.Email, 'email')}
-                      {renderField('Téléphone', 'phone', Icons.Phone, 'tel', '+33 1 23 45 67 89')}
+                      {renderField('Téléphone', 'phone', Icons.Phone, 'tel', '+216 22 222 222')}
                       
                       {isDoctor && renderSpecialtyField()}
                     </div>

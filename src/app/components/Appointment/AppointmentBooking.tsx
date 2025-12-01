@@ -34,14 +34,12 @@ export default function AppointmentBooking({ onSuccess }: AppointmentBookingProp
     message: string
   } | null>(null)
 
-  // Afficher les erreurs du hook
   useEffect(() => {
     if (error) {
       setNotification({ type: 'error', message: error })
     }
   }, [error])
 
-  // Navigation entre les étapes
   useEffect(() => {
     if (selectedDoctor) setStep('date')
     if (selectedDate) setStep('time')
@@ -75,13 +73,11 @@ export default function AppointmentBooking({ onSuccess }: AppointmentBookingProp
         message: result.message || 'Rendez-vous confirmé avec succès!'
       })
 
-      // Appeler le callback onSuccess après un délai
       setTimeout(() => {
         if (onSuccess) {
           onSuccess()
         }
         
-        // Reset complet
         setStep('doctor')
         setSelectedDoctor(null)
         setSelectedDate(null)
@@ -89,14 +85,12 @@ export default function AppointmentBooking({ onSuccess }: AppointmentBookingProp
       }, 2000)
 
     } catch (err) {
-      // L'erreur est déjà gérée par le hook
       console.error('Erreur de confirmation:', err)
     }
   }
 
   return (
     <div className="max-w-6xl mx-auto p-6">
-      {/* Notification */}
       {notification && (
         <Notification
           type={notification.type}
@@ -108,7 +102,6 @@ export default function AppointmentBooking({ onSuccess }: AppointmentBookingProp
         />
       )}
 
-      {/* En-tête */}
       <div className="text-center mb-8">
         <h1 className="text-3xl font-bold text-gray-900 mb-2">
           Prendre un rendez-vous
@@ -118,7 +111,6 @@ export default function AppointmentBooking({ onSuccess }: AppointmentBookingProp
         </p>
       </div>
 
-      {/* Barre de progression */}
       <div className="flex justify-center mb-8">
         <div className="flex items-center space-x-4">
           {['Médecin', 'Date', 'Horaire', 'Confirmation'].map((label, index) => {
@@ -163,7 +155,6 @@ export default function AppointmentBooking({ onSuccess }: AppointmentBookingProp
         </div>
       </div>
 
-      {/* Indicateur de chargement global */}
       {loading && (
         <div className="fixed inset-0 bg-black/20 flex items-center justify-center z-50">
           <div className="bg-white rounded-2xl p-6 flex items-center space-x-4">
@@ -173,7 +164,6 @@ export default function AppointmentBooking({ onSuccess }: AppointmentBookingProp
         </div>
       )}
 
-      {/* Contenu de l'étape courante */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {step === 'doctor' && (
           <DoctorSelection
@@ -239,7 +229,6 @@ export default function AppointmentBooking({ onSuccess }: AppointmentBookingProp
         )}
       </div>
 
-      {/* Bouton retour */}
       {step !== 'doctor' && (
         <div className="mt-6 text-center">
           <button
